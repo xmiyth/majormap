@@ -1,0 +1,9 @@
+.env
+.expo/
+node_modules/
+dist*/
+*.log
+pb_data/
+pocketbase.exe
+major_map_ed25519_*
+!.env.example
