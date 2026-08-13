@@ -130,7 +130,7 @@ export function LegalDocumentModal({ document, onClose }: Props) {
       <ScrollView contentContainerStyle={s.content} showsVerticalScrollIndicator={false}>
         <Text style={[s.brand, isDark && d.accent]}>MAJORMAP</Text>
         <Text style={[s.title, isDark && d.text]}>{title}</Text>
-        <Text style={[s.effective, isDark && d.muted]}>Effective August 10, 2026</Text>
+        <Text style={[s.effective, isDark && d.muted]}>Effective August 12, 2026</Text>
         <Text style={[s.intro, isDark && d.muted]}>{document === 'terms' ? 'These terms explain the rules for using MajorMap.' : 'This policy explains how MajorMap collects, uses and protects personal information.'}</Text>
         {sections.map((section) => <View key={section.title} style={[s.section, isDark && d.card]}>
           <Text style={[s.sectionTitle, isDark && d.text]}>{section.title}</Text>
