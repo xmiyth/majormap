@@ -2,11 +2,19 @@ import React from 'react';
 import { View, StyleSheet, Pressable, ScrollView } from 'react-native';
 import { Text } from '../components/Typography';
 import { DailySatCard } from '../components/DailySatCard';
+import { MatchResults } from '../components/MatchResults';
+import { Assessment } from '../lib/useMajorMap';
+import { Major } from '../types';
 import { majors } from '../data/majors';
 import { DailySatProgress } from '../lib/dailySat';
 import { darkModeAccent, useTheme } from '../lib/theme';
 
 type Props = {
+  active?: Assessment;
+  reviewed:boolean;
+  savedCount:number;
+  onOpenMajor:(major:Major)=>void;
+  onTryMajor:(major:Major)=>void;
   onExplore: () => void;
   onDiscover: () => void;
   isSignedIn: boolean;
@@ -17,14 +25,24 @@ type Props = {
 };
 const interestColors: Record<string, string> = { Technology: '#2E6DE6', Business: '#D78A12', Health: '#D94D67', Arts: '#A34FC4', Science: '#258C94' };
 
-export function HomeScreen({ onExplore, onDiscover, isSignedIn, userKey, dailySatProgress, onCompleteDailySat, onSignUp }: Props) {
+export function HomeScreen({ active, reviewed, savedCount, onOpenMajor, onTryMajor, onExplore, onDiscover, isSignedIn, userKey, dailySatProgress, onCompleteDailySat, onSignUp }: Props) {
   const { isDark } = useTheme();
   return <ScrollView style={[styles.container, isDark && dark.container]} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-    <View style={styles.topRow}><Text style={[styles.title, isDark && dark.text]}>Hi, Explorer</Text><View style={[styles.avatar, isDark && dark.accentSurface]}><Text style={styles.avatarText}>M</Text></View></View>
-    <View style={styles.hero}><Text style={styles.heroTitle}>Find a major that feels like you.</Text><Text style={styles.heroText}>Take a quick interest check and get ideas worth exploring.</Text><Pressable style={styles.primaryButton} onPress={onDiscover}><Text style={styles.primaryButtonText}>Discover my path</Text></Pressable></View>
+    <View style={styles.topRow}><Text style={[styles.title, isDark && dark.text]}>{active?'My MajorMap':'Hi, Explorer'}</Text><View style={[styles.avatar, isDark && dark.accentSurface]}><Text style={styles.avatarText}>M</Text></View></View>
     <DailySatCard progress={dailySatProgress} userKey={userKey} isSignedIn={isSignedIn} onComplete={onCompleteDailySat} onSignUp={onSignUp} />
+    {active ? <>
+      <Text style={[styles.sectionTitle,isDark&&dark.text]}>Your Top 5</Text>
+      <MatchResults matches={active.results} onOpenMajor={onOpenMajor} onTryMajor={onTryMajor}/>
+      <View style={[styles.majorRow,isDark&&dark.card]}><View>
+      <Text style={[styles.majorTitle,isDark&&dark.text]}>Your next steps</Text>
+      <Text style={[styles.majorSubtitle,isDark&&dark.muted]}>Assessment complete</Text>
+      <Text style={[styles.majorSubtitle,isDark&&dark.muted]}>{reviewed?'Done: reviewed a major':'Next: open a major and review its courses'}</Text>
+      <Text style={[styles.majorSubtitle,isDark&&dark.muted]}>{savedCount?'Done: saved a major':'Next: save a major to explore further'}</Text>
+      <Pressable onPress={onDiscover}><Text style={[styles.link,isDark&&dark.link]}>History and retake Discover</Text></Pressable>
+      </View></View>
+    </> : <View style={styles.hero}><Text style={styles.heroTitle}>Build Your MajorMap</Text><Text style={styles.heroText}>Find your Top 5, understand your matches, and make a shortlist. Start with 24 short interest and experience questions.</Text><Pressable style={styles.primaryButton} onPress={onDiscover}><Text style={styles.primaryButtonText}>Build Your MajorMap</Text></Pressable></View>}
     <View style={styles.sectionHeader}><Text style={[styles.sectionTitle, isDark && dark.text]}>Popular to explore</Text><Pressable onPress={onExplore}><Text style={[styles.link, isDark && dark.link]}>View all</Text></Pressable></View>
-    {majors.slice(0, 3).map((major) => <Pressable key={major.id} onPress={onExplore} style={[styles.majorRow, isDark && dark.card]}><View style={[styles.majorMark, { backgroundColor: major.color }]}><Text style={styles.majorLetter}>{major.title[0]}</Text></View><View style={styles.majorInfo}><Text style={[styles.majorTitle, isDark && dark.text]}>{major.title}</Text><Text style={[styles.majorSubtitle, isDark && dark.muted]} numberOfLines={1}>{major.subtitle}</Text></View><Text style={[styles.arrow, isDark && dark.muted]}>›</Text></Pressable>)}
+    {majors.slice(0, 3).map((major) => <Pressable key={major.id} onPress={()=>onOpenMajor(major)} style={[styles.majorRow, isDark && dark.card]}><View style={[styles.majorMark, { backgroundColor: major.color }]}><Text style={styles.majorLetter}>{major.title[0]}</Text></View><View style={styles.majorInfo}><Text style={[styles.majorTitle, isDark && dark.text]}>{major.title}</Text><Text style={[styles.majorSubtitle, isDark && dark.muted]} numberOfLines={1}>{major.subtitle}</Text></View><Text style={[styles.arrow, isDark && dark.muted]}>›</Text></Pressable>)}
     <Text style={[styles.sectionTitle, isDark && dark.text]}>Explore by interest</Text><View style={styles.chips}>{Object.entries(interestColors).map(([label, color]) => <Pressable key={label} style={({ pressed }) => [styles.chip, { backgroundColor: color + (isDark ? '32' : '18'), borderColor: color + '9A', shadowColor: color }, pressed && styles.chipPressed]} onPress={onExplore}><Text style={[styles.chipText, { color: isDark ? darkModeAccent(color) : color }]}>{label}</Text></Pressable>)}</View>
   </ScrollView>;
 }

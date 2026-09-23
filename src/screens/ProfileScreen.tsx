@@ -6,6 +6,8 @@ import { majors } from '../data/majors';
 import { Major } from '../types';
 import { MajorCard } from '../components/MajorCard';
 import { useTheme } from '../lib/theme';
+import { ChallengeAttempt } from '../lib/useChallengeAttempts';
+import { majorChallenges } from '../data/majorChallenges';
 
 type Student = {
   name: string;
@@ -27,6 +29,9 @@ type Student = {
 };
 
 type Props = {
+  onOpenMajor: (major: Major) => void;
+  challengeAttempts: ChallengeAttempt[];
+  onOpenAttempt: (attempt:ChallengeAttempt)=>void;
   savedCount: number;
   savedIds: string[];
   onToggleSave: (major: Major) => void;
@@ -42,7 +47,7 @@ type Props = {
 
 const choices = ['Math', 'Science', 'Technology', 'Art & design', 'Writing', 'Business', 'Helping people', 'Building things', ...majors.map((major) => major.title)];
 
-export function ProfileScreen({ savedCount, savedIds, onToggleSave, student, interests, onUpdateInterests, onSignUp, onUpdateStudent, onSignOut, onExplore, onOpenSettings }: Props) {
+export function ProfileScreen({ onOpenMajor, challengeAttempts, onOpenAttempt, savedCount, savedIds, onToggleSave, student, interests, onUpdateInterests, onSignUp, onUpdateStudent, onSignOut, onExplore, onOpenSettings }: Props) {
   const { isDark } = useTheme();
   const [picker, setPicker] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -142,8 +147,10 @@ export function ProfileScreen({ savedCount, savedIds, onToggleSave, student, int
         {interests.length ? <View style={s.chips}>{interests.map((item) => <View key={item} style={[s.chip, isDark && d.accent]}><Text style={[s.chipText, isDark && d.link]}>{item}</Text></View>)}</View> : <Text style={[s.muted, isDark && d.muted]}>Choose up to three interests to personalize your recommendations.</Text>}
       </Pressable>
 
-      <Text style={[s.section, isDark && d.text]}>Saved majors</Text>
-      {saved.length ? saved.map((major) => <MajorCard key={major.id} major={major} onPress={() => {}} onToggleSave={() => onToggleSave(major)} saved />) : <View style={[s.card, isDark && d.card]}><Text style={[s.muted, isDark && d.muted]}>No saved majors yet.</Text><Pressable onPress={onExplore}><Text style={s.link}>Explore majors</Text></Pressable></View>}
+      <Text style={[s.section, s.savedHeading, isDark && d.text]}>Saved majors</Text>
+      {saved.length ? saved.map((major) => <MajorCard key={major.id} major={major} onPress={() => onOpenMajor(major)} onToggleSave={() => onToggleSave(major)} saved />) : <View style={[s.card, isDark && d.card]}><Text style={[s.muted, isDark && d.muted]}>No saved majors yet.</Text><Pressable onPress={onExplore}><Text style={s.link}>Explore majors</Text></Pressable></View>}
+      <Text style={[s.section,s.savedHeading,isDark&&d.text]}>Majors tried</Text>
+      {challengeAttempts.length ? challengeAttempts.map(attempt=>{const major=majors.find(item=>item.id===attempt.majorId);const challenge=majorChallenges.find(item=>item.id===attempt.challengeId);return <Pressable key={attempt.id} onPress={()=>onOpenAttempt(attempt)} style={[s.card,s.compact,isDark&&d.card]}><Text style={[s.cardTitle,isDark&&d.text]}>{major?.title??attempt.majorId}</Text><Text style={[s.muted,isDark&&d.muted]}>{challenge?.title??'Major challenge'} · Completed {new Date(attempt.completedAt).toLocaleDateString()}</Text><Text style={[s.muted,isDark&&d.muted]}>Enjoyment: {attempt.enjoyment}/5 · Would do again: {attempt.futureInterest[0].toUpperCase()+attempt.futureInterest.slice(1)}</Text></Pressable>;}) : <View style={[s.card,isDark&&d.card]}><Text style={[s.muted,isDark&&d.muted]}>No completed major challenges yet.</Text></View>}
       <Pressable onPress={onSignOut} style={s.signOut}><Text style={s.signOutText}>Sign out</Text></Pressable>
     </ScrollView>
 
@@ -210,6 +217,7 @@ const s = StyleSheet.create({
   taskDone: { color: '#3A7D5B' },
   row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 9 },
   section: { color: '#263250', fontSize: 17, fontWeight: '800' },
+  savedHeading: { marginBottom: 12 },
   link: { color: '#4056C6', fontWeight: '800', marginTop: 9 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: { backgroundColor: '#E7EAFF', paddingVertical: 8, paddingHorizontal: 11, borderRadius: 99 },

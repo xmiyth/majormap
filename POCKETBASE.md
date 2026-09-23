@@ -12,3 +12,5 @@ For a physical phone, `127.0.0.1` points to the phone itself. Use your computer'
 The `users` collection permits public account creation and username-or-email password authentication. Full user records are owner-only. Signed-in students discover the limited `public_profiles` view, which exposes only name, username, grade, school, and interests; only each owner can update or delete their source account.
 
 The deployed API URL is `https://majormap.duckdns.org`. PocketBase runs as a systemd service on the Ubuntu VPS and manages TLS certificates for this hostname.
+
+Personalization and Try This Major use additive migrations in `pb_migrations/`. Challenge attempts are owner-only and immutable; retakes create new records. See `docs/TRY_THIS_MAJOR.md` before deploying the challenge migration.

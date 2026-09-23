@@ -5,6 +5,7 @@ import { Feather } from '@expo/vector-icons';
 import { pocketbaseUrl } from '../lib/pocketbase';
 import { useTheme } from '../lib/theme';
 import { LegalDocumentModal, LegalDocumentType } from '../components/LegalDocumentModal';
+import { BlockedUser } from '../types';
 
 type Student = {
   name: string;
@@ -19,6 +20,8 @@ type Student = {
 
 type Props = {
   student: Student;
+  blockedUsers: BlockedUser[];
+  onUnblockUser: (userId: string) => Promise<string | null>;
   onClose: () => void;
   onSignOut: () => void;
   onLeaveSchool: (schoolId: string) => void;
@@ -27,7 +30,7 @@ type Props = {
   onUpdateAcademics: (grade: string, sat: string, psat: string) => Promise<string | null>;
 };
 
-export function SettingsScreen({ student, onClose, onSignOut, onLeaveSchool, onChangePassword, onDeleteAccount, onUpdateAcademics }: Props) {
+export function SettingsScreen({ student, blockedUsers, onUnblockUser, onClose, onSignOut, onLeaveSchool, onChangePassword, onDeleteAccount, onUpdateAcademics }: Props) {
   const { mode, isDark, setMode } = useTheme();
   const [legalDocument, setLegalDocument] = useState<LegalDocumentType | null>(null);
   const [currentPassword, setCurrentPassword] = useState('');
@@ -47,6 +50,8 @@ export function SettingsScreen({ student, onClose, onSignOut, onLeaveSchool, onC
   const [academicStatus, setAcademicStatus] = useState('');
   const [academicError, setAcademicError] = useState('');
   const [savingAcademics, setSavingAcademics] = useState(false);
+  const [unblockingId, setUnblockingId] = useState<string | null>(null);
+  const [blockError, setBlockError] = useState('');
 
   const savePassword = async () => {
     setPasswordError('');
@@ -149,6 +154,22 @@ export function SettingsScreen({ student, onClose, onSignOut, onLeaveSchool, onC
         <Pressable disabled={savingPassword} style={[s.primaryButton, savingPassword && s.disabled]} onPress={savePassword}>{savingPassword ? <ActivityIndicator color="#FFF" /> : <Text style={s.primaryText}>Update password</Text>}</Pressable>
       </View>
 
+      <Text style={[s.sectionLabel, isDark && d.sectionLabel]}>BLOCKED USERS</Text>
+      <View style={[s.cardColumn, isDark && d.card]}>
+        {blockedUsers.length ? blockedUsers.map((blocked) => <View key={blocked.blockId} style={s.blockedRow}>
+          <View style={[s.settingIcon, isDark && d.iconSurface]}><Feather name="user-x" size={18} color={isDark ? '#8E9CFF' : '#4056C6'} /></View>
+          <View style={s.settingText}><Text style={[s.settingTitle, isDark && d.text]}>{blocked.name || blocked.username || 'Blocked user'}</Text>{blocked.username ? <Text style={[s.muted, isDark && d.muted]}>@{blocked.username}</Text> : null}</View>
+          <Pressable disabled={unblockingId === blocked.id} style={[s.unblockButton, isDark && d.outline]} onPress={async () => {
+            setBlockError('');
+            setUnblockingId(blocked.id);
+            const error = await onUnblockUser(blocked.id);
+            setUnblockingId(null);
+            if (error) setBlockError(error);
+          }}>{unblockingId === blocked.id ? <ActivityIndicator size="small" color="#4056C6" /> : <Text style={[s.unblockText, isDark && d.muted]}>Unblock</Text>}</Pressable>
+        </View>) : <Text style={[s.muted, isDark && d.muted]}>You have not blocked anyone.</Text>}
+        {blockError ? <Text style={[s.error, s.blockError]}>{blockError}</Text> : null}
+      </View>
+
       <Text style={[s.sectionLabel, isDark && d.sectionLabel]}>SESSION</Text>
       <View style={[s.cardColumn, isDark && d.card]}>
         <Pressable style={s.actionRow} onPress={onSignOut}><Feather name="log-out" size={18} color="#4056C6" /><Text style={[s.actionText, isDark && d.text]}>Sign out</Text><Feather name="chevron-right" size={19} color="#A1A8B7" /></Pressable>
@@ -200,6 +221,10 @@ const s = StyleSheet.create({
   settingIcon: { width: 38, height: 38, borderRadius: 11, backgroundColor: '#EEF0FF', alignItems: 'center', justifyContent: 'center', marginRight: 11 },
   settingText: { flex: 1 },
   settingTitle: { color: '#34415E', fontSize: 13, fontWeight: '900' },
+  blockedRow: { flexDirection: 'row', alignItems: 'center', minHeight: 48, marginBottom: 9 },
+  unblockButton: { borderWidth: 1, borderColor: '#D7DBE8', borderRadius: 10, minWidth: 76, minHeight: 38, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 10 },
+  unblockText: { color: '#59667F', fontSize: 11, fontWeight: '900' },
+  blockError: { marginTop: 5, marginBottom: 0 },
   outlineButton: { borderWidth: 1, borderColor: '#D7DBE8', borderRadius: 11, padding: 11, alignItems: 'center', marginTop: 14 },
   outlineText: { color: '#59667F', fontSize: 12, fontWeight: '800' },
   cardTitle: { color: '#34415E', fontSize: 15, fontWeight: '900', marginBottom: 12 },

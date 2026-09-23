@@ -5,6 +5,7 @@ import { Feather } from '@expo/vector-icons';
 import { RecordModel } from 'pocketbase';
 import { pb, pocketBaseErrorMessage } from '../lib/pocketbase';
 import { useTheme } from '../lib/theme';
+import { ModerationUser, ReportReason } from '../types';
 
 type School = {
   id: string;
@@ -72,6 +73,167 @@ const schools: School[] = [
       'After-school activities, athletics, and clubs',
     ],
   },
+  {
+    id: 'haileybury-almaty',
+    name: 'Haileybury Almaty',
+    shortName: 'HA',
+    location: 'Almaty, Kazakhstan',
+    summary: 'A selective, nonprofit British international school offering an English-language education from Reception through Sixth Form.',
+    system: 'British independent school',
+    ages: 'Ages 4–18 · Reception through Year 13',
+    founded: 'Founded in 2008',
+    accreditation: 'British curriculum school associated with Haileybury in the United Kingdom and using the High Performance Learning framework.',
+    curriculum: 'English National Curriculum foundations, followed by IGCSE in Years 10–11 and A Levels in Years 12–13.',
+    language: 'English is the language of instruction.',
+    community: 'A coeducational international community with both Kazakhstani and international pupils.',
+    address: '112 Al-Farabi Avenue, Almaty, Kazakhstan',
+    hours: 'School starts at 7:30 and finishes between 14:00 and 16:30 depending on age group.',
+    phone: '+7 727 355 01 00',
+    email: 'admissions@haileyburyalmaty.kz',
+    website: 'https://www.haileybury.kz/en/almaty',
+    admissionsUrl: 'https://www.haileybury.kz/en/almaty/how-to-apply',
+    academics: [
+      'Reception and Junior School aligned with the English National Curriculum',
+      'Haileybury Curriculum in Years 7–9',
+      'IGCSE programme in Years 10–11',
+      'A Level programme in Years 12–13',
+      'Languages, art, music, physical education, robotics, and a broad co-curricular programme',
+    ],
+    facilities: [
+      '25-metre indoor swimming pool',
+      'Gym and sports hall',
+      'Dance, performing arts, and music studios',
+      'Specialist learning spaces supporting science, technology, and the arts',
+    ],
+    services: [
+      'University counselling and application support',
+      'Pupil transport service',
+      'Pastoral care, safeguarding, and wellbeing support',
+      'House system and co-curricular activities',
+      'Scholarship and bursary programmes',
+    ],
+  },
+  {
+    id: 'kazakhstan-international-school',
+    name: 'Kazakhstan International School',
+    shortName: 'KIS',
+    location: 'Almaty, Kazakhstan',
+    summary: 'A private, coeducational IB World School serving early-years through Grade 12 students with student-centered, inquiry-based learning.',
+    system: 'International Baccalaureate World School',
+    ages: 'Ages 2–18 · Early Years through Grade 12',
+    founded: 'Founded in 1998',
+    accreditation: 'IB World School authorised to offer the Primary Years, Middle Years, and Diploma Programmes.',
+    curriculum: 'International Baccalaureate continuum covering the PYP, MYP, and Diploma Programme, preceded by an early-years programme.',
+    language: 'English is the principal language of instruction, with multilingual learning that includes Russian and Kazakh.',
+    community: 'An international community in which approximately half of students are expatriates.',
+    address: '118/15 Al-Farabi Avenue, Almaty 050044, Kazakhstan',
+    hours: 'School tours are available by appointment; contact Admissions for current hours.',
+    phone: '+7 727 356 50 00',
+    email: 'almaty.admissions@kisnet.org',
+    website: 'https://almaty.kisnet.org/',
+    admissionsUrl: 'https://almaty.kisnet.org/admissions/apply',
+    academics: [
+      'Early Years programme for children ages 2–6',
+      'IB Primary Years Programme',
+      'IB Middle Years Programme',
+      'IB Diploma Programme in Grades 11–12',
+      'Arts, athletics, technology, service learning, and extracurricular activities',
+    ],
+    facilities: [
+      'Large indoor and outdoor learning spaces',
+      'Modern secondary fitness gym for strength training, rock climbing, and boxing',
+      'Dedicated arts and performing-arts learning opportunities',
+      'Athletics and extracurricular activity spaces',
+    ],
+    services: [
+      'Optional school bus transportation',
+      'Optional hot-meal canteen service',
+      'College counselling and university guidance',
+      'Parent Teacher Association and Parent Academy',
+      'School uniform store and student support services',
+    ],
+  },
+  {
+    id: 'miras-international-school',
+    name: 'Miras International School',
+    shortName: 'MIS',
+    location: 'Almaty, Kazakhstan',
+    summary: 'A multilingual international school integrating Kazakhstan’s national education standards with the International Baccalaureate continuum.',
+    system: 'International Baccalaureate and Kazakhstan national programmes',
+    ages: 'Ages 3–18 · Preschool through Grade 12',
+    founded: 'Founded in 1999',
+    accreditation: 'Authorised for the IB Primary Years, Middle Years, and Diploma Programmes and accredited by the Council of International Schools.',
+    curriculum: 'Integrated Kazakhstani and IB programmes, including PYP, MYP, IB Diploma, and a Grade 11 Kazakhstani programme.',
+    language: 'Instruction is offered in Kazakh, English, and Russian, with support for French, Chinese, and other languages.',
+    community: 'Students and faculty represent more than 20 countries.',
+    address: '190 Al-Farabi Avenue, Almaty 050043, Kazakhstan',
+    hours: 'Contact the Admissions Office for current school and tour hours.',
+    phone: '+7 727 313 39 35',
+    email: 'admissions@miras.kz',
+    website: 'https://www.miras.kz/en/',
+    admissionsUrl: 'https://www.miras.kz/en/notices',
+    academics: [
+      'IB Primary Years Programme integrated with Kazakhstan education standards',
+      'IB Middle Years Programme',
+      'IB Diploma Programme in Grades 11–12',
+      'Grade 11 Kazakhstani national programme',
+      'Multilingual study, sports, creative arts, and university-entrance electives',
+    ],
+    facilities: [
+      'Modern science and computer laboratories',
+      'Two libraries with research stations and computers',
+      'Art, music, drama, and dance spaces',
+      'Swimming pool, football field, two gyms, workout room, and climbing wall',
+      'Greenhouse supporting ecology and conservation learning',
+    ],
+    services: [
+      'Cafeteria and meal services',
+      'University guidance and SAT preparation support',
+      'Music school, sports, creative arts, and interest clubs',
+      'Health, counselling, and learning support',
+      '24-hour campus security and regular safety drills',
+    ],
+  },
+  {
+    id: 'galaxy-international-school',
+    name: 'Galaxy International School',
+    shortName: 'GIS',
+    location: 'Almaty, Kazakhstan',
+    summary: 'A nonprofit international school offering Kazakhstan national requirements alongside Cambridge programmes from primary through A Levels.',
+    system: 'Cambridge International School',
+    ages: 'Ages 5–18 · Grade 0 through Grade 12',
+    founded: 'Cambridge International School since 2015; international-school status awarded in 2018',
+    accreditation: 'Recognised by Kazakhstan’s education ministry; Cambridge International School and member of CIS and COBIS.',
+    curriculum: 'Cambridge Primary, Lower Secondary, IGCSE, and AS/A Level programmes enriched with Kazakhstan national curriculum requirements.',
+    language: 'Core Cambridge subjects are taught in English; Kazakh and additional modern languages are also offered.',
+    community: 'A coeducational international community with national and international teaching staff.',
+    address: '9, Microdistrict 4, Almaty, Kazakhstan',
+    hours: 'Contact the school for current school-day and Admissions Office hours.',
+    phone: '+7 777 000 55 52',
+    email: 'info@galaxy.edu.kz',
+    website: 'https://galaxy.edu.kz/en',
+    admissionsUrl: 'https://galaxy.edu.kz/en/page/admissions-process',
+    academics: [
+      'Cambridge Primary for Grades 0–5',
+      'Cambridge Lower Secondary for Grades 6–8',
+      'Cambridge IGCSE for Grades 9–10',
+      'Cambridge AS and A Levels for Grades 11–12',
+      'English, mathematics, science, global perspectives, computing, fine art, music, physical education, and languages',
+    ],
+    facilities: [
+      'Primary and secondary learning spaces',
+      'Fine art and music learning facilities',
+      'Physical education and extracurricular activity spaces',
+      'Dining facilities',
+    ],
+    services: [
+      'Pastoral care and learning support',
+      'Career counselling',
+      'Extracurricular activities and student leadership',
+      'Dining and school uniform services',
+      'Parent representative group and home-visit programme',
+    ],
+  },
 ];
 
 const openUrl = (url: string) => Linking.openURL(url).catch(() => undefined);
@@ -86,8 +248,20 @@ const formatMessageTime = (value?: string) => {
 
 type Props = {
   joinedSchoolIds: string[];
+  blockedUserIds: string[];
   onToggleJoin: (schoolId: string) => void;
+  onBlockUser: (user: ModerationUser) => Promise<string | null>;
+  onReportUser: (user: ModerationUser, reason: ReportReason, details: string, context: string) => Promise<string | null>;
 };
+
+const reportReasons: { value: ReportReason; label: string }[] = [
+  { value: 'harassment', label: 'Harassment or bullying' },
+  { value: 'spam', label: 'Spam' },
+  { value: 'impersonation', label: 'Impersonation' },
+  { value: 'inappropriate_content', label: 'Inappropriate content' },
+  { value: 'safety', label: 'Safety concern' },
+  { value: 'other', label: 'Other' },
+];
 
 type SchoolMember = RecordModel & {
   name?: string;
@@ -121,7 +295,7 @@ function DetailSection({ title, items }: { title: string; items: string[] }) {
   </View>;
 }
 
-export function SchoolsScreen({ joinedSchoolIds, onToggleJoin }: Props) {
+export function SchoolsScreen({ joinedSchoolIds, blockedUserIds, onToggleJoin, onBlockUser, onReportUser }: Props) {
   const { isDark } = useTheme();
   const [selected, setSelected] = useState<School | null>(null);
   const [schoolTab, setSchoolTab] = useState<'info' | 'leaderboard' | 'chat'>('leaderboard');
@@ -140,11 +314,34 @@ export function SchoolsScreen({ joinedSchoolIds, onToggleJoin }: Props) {
   const [savingEdit, setSavingEdit] = useState(false);
   const [deletingMessageId, setDeletingMessageId] = useState<string | null>(null);
   const [profileMember, setProfileMember] = useState<SchoolMember | null>(null);
+  const [reportMember, setReportMember] = useState<SchoolMember | null>(null);
+  const [reportReason, setReportReason] = useState<ReportReason | null>(null);
+  const [reportDetails, setReportDetails] = useState('');
+  const [reportError, setReportError] = useState('');
+  const [submittingReport, setSubmittingReport] = useState(false);
   const slide = useRef(new Animated.Value(0)).current;
+  const tabOpacity = useRef(new Animated.Value(1)).current;
+  const tabOffset = useRef(new Animated.Value(0)).current;
+  const tabIconScale = useRef(new Animated.Value(1)).current;
   const width = Dimensions.get('window').width;
   const joinedSchool = schools.find((school) => joinedSchoolIds.includes(school.id)) ?? null;
   const joined = selected ? joinedSchoolIds.includes(selected.id) : false;
-  const rankedMembers = [...members].sort((a, b) => Number(b.gpa || 0) - Number(a.gpa || 0) || Number(b.sat || b.psat || 0) - Number(a.sat || a.psat || 0) || (a.username ?? '').localeCompare(b.username ?? ''));
+  const visibleMembers = members.filter((member) => !blockedUserIds.includes(member.id));
+  const visibleMessages = messages.filter((message) => !blockedUserIds.includes(message.senderId));
+  const rankedMembers = [...visibleMembers].sort((a, b) => Number(b.gpa || 0) - Number(a.gpa || 0) || Number(b.sat || b.psat || 0) - Number(a.sat || a.psat || 0) || (a.username ?? '').localeCompare(b.username ?? ''));
+
+  const changeSchoolTab = (next:'info'|'leaderboard'|'chat') => {
+    if(next===schoolTab)return;
+    Animated.timing(tabOpacity,{toValue:0,duration:90,easing:Easing.in(Easing.quad),useNativeDriver:true}).start(({finished})=>{
+      if(!finished)return;
+      setSchoolTab(next);tabOffset.setValue(7);tabIconScale.setValue(.78);
+      Animated.parallel([
+        Animated.timing(tabOpacity,{toValue:1,duration:180,easing:Easing.out(Easing.cubic),useNativeDriver:true}),
+        Animated.timing(tabOffset,{toValue:0,duration:210,easing:Easing.out(Easing.cubic),useNativeDriver:true}),
+        Animated.spring(tabIconScale,{toValue:1,friction:7,tension:90,useNativeDriver:true}),
+      ]).start();
+    });
+  };
 
   useEffect(() => {
     if (joinedSchool) {
@@ -266,6 +463,42 @@ export function SchoolsScreen({ joinedSchoolIds, onToggleJoin }: Props) {
     ]);
   };
 
+  const blockMember = (member: SchoolMember) => {
+    Alert.alert('Block this user?', `You will no longer see ${member.name || member.username || 'this user'} in community profiles, rankings, or chat. You can unblock them in Settings.`, [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Block', style: 'destructive', onPress: async () => {
+        const error = await onBlockUser({ id: member.id, name: member.name, username: member.username });
+        if (error) Alert.alert('Could not block user', error);
+        else setProfileMember(null);
+      } },
+    ]);
+  };
+
+  const openReport = (member: SchoolMember) => {
+    setReportReason(null);
+    setReportDetails('');
+    setReportError('');
+    setReportMember(member);
+  };
+
+  const submitReport = async () => {
+    if (!reportMember || !reportReason || submittingReport) {
+      if (!reportReason) setReportError('Choose a reason for the report.');
+      return;
+    }
+    setSubmittingReport(true);
+    setReportError('');
+    const error = await onReportUser({ id: reportMember.id, name: reportMember.name, username: reportMember.username }, reportReason, reportDetails, selected ? `school:${selected.id}` : 'school');
+    setSubmittingReport(false);
+    if (error) {
+      setReportError(error);
+      return;
+    }
+    setReportMember(null);
+    setProfileMember(null);
+    Alert.alert('Report submitted', 'Thank you. A MajorMap administrator can review this report in PocketBase.');
+  };
+
   const openSchool = (school: School) => {
     setSchoolTab('leaderboard');
     setSelected(school);
@@ -299,7 +532,7 @@ export function SchoolsScreen({ joinedSchoolIds, onToggleJoin }: Props) {
         <Text style={s.heroLocation}>{selected.location}</Text>
         <Text style={s.heroSummary}>{selected.summary}</Text>
         <Pressable style={[s.join, joined && s.joined]} onPress={() => onToggleJoin(selected.id)}><Feather name={joined ? 'log-out' : 'plus'} size={16} color={joined ? '#4056C6' : '#FFF'} /><Text style={[s.joinText, joined && s.joinedText]}>{joined ? 'Leave school community' : 'Join school community'}</Text></Pressable>
-        <Text style={s.joinDisclosure}>Joining shows your school profile, GPA, optional test scores, and streak to AIS members. Bio and contact links appear only if you enable sharing in Profile.</Text>
+        <Text style={s.joinDisclosure}>Joining shows your school profile, GPA, optional test scores, and streak to {selected.shortName} members. Bio and contact links appear only if you enable sharing in Profile.</Text>
       </View>
 
       <View style={s.stats}>
@@ -315,20 +548,21 @@ export function SchoolsScreen({ joinedSchoolIds, onToggleJoin }: Props) {
           ['info', 'info', 'Info'],
         ] as const).map(([key, icon, label]) => {
           const active = schoolTab === key;
-          return <Pressable key={key} onPress={() => setSchoolTab(key)} style={({ pressed }) => [s.schoolTab, active && s.schoolTabActive, isDark && active && d.tabActive, pressed && s.schoolTabPressed]}><Feather name={icon} size={15} color={active ? '#FFF' : isDark ? '#A7B2C7' : '#6F7A91'} /><Text style={[s.schoolTabText, isDark && d.muted, active && s.schoolTabTextActive]}>{label}</Text></Pressable>;
+          return <Pressable key={key} onPress={() => changeSchoolTab(key)} style={({ pressed }) => [s.schoolTab, active && s.schoolTabActive, isDark && active && d.tabActive, pressed && s.schoolTabPressed]}><Animated.View style={active ? {transform:[{scale:tabIconScale}]} : undefined}><Feather name={icon} size={15} color={active ? '#FFF' : isDark ? '#A7B2C7' : '#6F7A91'} /></Animated.View><Text style={[s.schoolTabText, isDark && d.muted, active && s.schoolTabTextActive]}>{label}</Text></Pressable>;
         })}
       </View>
 
+      <Animated.View style={{opacity:tabOpacity,transform:[{translateY:tabOffset}]}}>
       {schoolTab !== 'info' && !joined ? <View style={[s.communityLocked, isDark && d.accent]}>
         <Feather name="users" size={24} color="#4056C6" />
-        <Text style={[s.lockedTitle, isDark && d.text]}>Join to meet the AIS community</Text>
+        <Text style={[s.lockedTitle, isDark && d.text]}>Join to meet the {selected.shortName} community</Text>
         <Text style={[s.lockedText, isDark && d.muted]}>Joined students appear in the live leaderboard and can participate in the school chat.</Text>
       </View> : null}
 
       {schoolTab === 'leaderboard' && joined ? <>
         <View style={[s.sectionCard, s.leaderboardCard, isDark && d.card, isDark && d.leaderboardCard]}>
-          <View style={[s.leaderboardHeader, isDark && d.leaderboardHeader]}><View style={s.leaderboardIcon}><Feather name="award" size={24} color="#FFF" /></View><View style={s.sectionHeading}><Text style={[s.leaderboardEyebrow, isDark && d.link]}>AIS SCHOOL RANKINGS</Text><Text style={[s.leaderboardTitle, isDark && d.text]}>Student leaderboard</Text><Text style={[s.leaderboardSub, isDark && d.muted]}>{members.length} joined student{members.length === 1 ? '' : 's'} · GPA, test scores, and daily streaks</Text></View></View>
-          <View style={s.rankList}>{communityLoading && !members.length ? <ActivityIndicator color="#4056C6" /> : rankedMembers.length ? rankedMembers.map((member, index) => <Pressable key={member.id} accessibilityRole="button" accessibilityLabel={`View ${member.name || member.username || 'student'} profile`} onPress={() => setProfileMember(member)} style={({ pressed }) => [s.rankRow, index < 3 && s.topRankRow, isDark && index < 3 && d.topRankRow, pressed && s.rankRowPressed]}>
+          <View style={[s.leaderboardHeader, isDark && d.leaderboardHeader]}><View style={s.leaderboardIcon}><Feather name="award" size={24} color="#FFF" /></View><View style={s.sectionHeading}><Text style={[s.leaderboardEyebrow, isDark && d.link]}>{selected.shortName} SCHOOL RANKINGS</Text><Text style={[s.leaderboardTitle, isDark && d.text]}>Student leaderboard</Text><Text style={[s.leaderboardSub, isDark && d.muted]}>{visibleMembers.length} visible student{visibleMembers.length === 1 ? '' : 's'} · GPA, test scores, and daily streaks</Text></View></View>
+          <View style={s.rankList}>{communityLoading && !visibleMembers.length ? <ActivityIndicator color="#4056C6" /> : rankedMembers.length ? rankedMembers.map((member, index) => <Pressable key={member.id} accessibilityRole="button" accessibilityLabel={`View ${member.name || member.username || 'student'} profile`} onPress={() => setProfileMember(member)} style={({ pressed }) => [s.rankRow, index < 3 && s.topRankRow, isDark && index < 3 && d.topRankRow, pressed && s.rankRowPressed]}>
             <View style={[s.rankNumberBadge, index === 0 && s.firstRankBadge, index === 1 && s.secondRankBadge, index === 2 && s.thirdRankBadge]}><Text style={[s.rankNumber, index < 3 && s.topRankNumber]}>#{index + 1}</Text></View>
             <View style={s.rankIdentity}><Text style={[s.rankName, isDark && d.text]}>{member.name || 'Student'}</Text><Text style={[s.rankHandle, isDark && d.muted]}>@{member.username || 'student'} · Grade {member.grade || '—'}</Text></View>
             <View style={s.rankScores}><Text style={[s.rankGpa, isDark && d.text]}>GPA {member.gpa || '—'}</Text><Text style={[s.rankTest, isDark && d.muted]}>{member.sat ? `SAT ${member.sat}` : member.psat ? `PSAT ${member.psat}` : 'No test score'}</Text><View style={s.rankStreak}><Feather name="zap" size={10} color="#D96420" /><Text style={s.rankStreakText}>{member.dailySatStreak ?? 0} day streak</Text></View></View><Feather name="chevron-right" size={17} color={isDark ? '#71809C' : '#A0A8B7'} />
@@ -342,15 +576,15 @@ export function SchoolsScreen({ joinedSchoolIds, onToggleJoin }: Props) {
             <View style={s.chatHeaderIcon}><Feather name="message-circle" size={21} color="#FFF" /></View>
             <View style={s.sectionHeading}>
               <Text style={[s.chatEyebrow, isDark && d.link]}>SCHOOL COMMUNITY</Text>
-              <Text style={[s.chatTitle, isDark && d.text]}>AIS student chat</Text>
+              <Text style={[s.chatTitle, isDark && d.text]}>{selected.shortName} student chat</Text>
               <Text style={[s.chatSubtitle, isDark && d.muted]}>Talk with students who joined your school.</Text>
             </View>
-            <View style={[s.memberPill, isDark && d.memberPill]}><View style={s.liveDot} /><Text style={[s.memberPillText, isDark && d.text]}>{members.length}</Text></View>
+            <View style={[s.memberPill, isDark && d.memberPill]}><View style={s.liveDot} /><Text style={[s.memberPillText, isDark && d.text]}>{visibleMembers.length}</Text></View>
           </View>
-          <View style={s.messageList}>{messages.length ? messages.map((message) => {
+          <View style={s.messageList}>{visibleMessages.length ? visibleMessages.map((message) => {
             const member = members.find((item) => item.id === message.senderId);
             const mine = message.senderId === pb.authStore.record?.id;
-            const senderName = member?.name || member?.username || 'AIS student';
+            const senderName = member?.name || member?.username || `${selected.shortName} student`;
             const edited = !!message.updated && !!message.created && Date.parse(message.updated) - Date.parse(message.created) > 1000;
             const actionsOpen = activeMessageId === message.id;
             const toggleMessageDetails = () => { animateChatLayout(); setActiveMessageId(actionsOpen ? null : message.id); };
@@ -375,7 +609,7 @@ export function SchoolsScreen({ joinedSchoolIds, onToggleJoin }: Props) {
           {communityError ? <Text style={s.communityError}>{communityError}</Text> : null}
           {editingMessageId ? <View style={[s.editingBanner, isDark && d.editingBanner]}><Feather name="edit-2" size={14} color={isDark ? '#B7BFFF' : '#4056C6'} /><View style={s.editingCopy}><Text style={[s.editingTitle, isDark && d.text]}>Editing message</Text><Text style={[s.editingHint, isDark && d.muted]}>Save to update it for everyone.</Text></View><Pressable hitSlop={8} onPress={cancelEditingMessage}><Feather name="x" size={18} color={isDark ? '#A7B2C7' : '#667188'} /></Pressable></View> : null}
           <View style={[s.composer, isDark && d.composer]}>
-            <TextInput style={[s.chatInput, isDark && d.text]} value={editingMessageId ? editDraft : draft} onChangeText={editingMessageId ? setEditDraft : setDraft} onFocus={() => { setChatInputFocused(true); revealComposer(); }} onBlur={() => setChatInputFocused(false)} placeholder={editingMessageId ? 'Edit your message' : 'Message AIS students'} placeholderTextColor={isDark ? '#71809C' : '#929BAD'} maxLength={1000} multiline scrollEnabled />
+            <TextInput style={[s.chatInput, isDark && d.text]} value={editingMessageId ? editDraft : draft} onChangeText={editingMessageId ? setEditDraft : setDraft} onFocus={() => { setChatInputFocused(true); revealComposer(); }} onBlur={() => setChatInputFocused(false)} placeholder={editingMessageId ? 'Edit your message' : `Message ${selected.shortName} students`} placeholderTextColor={isDark ? '#71809C' : '#929BAD'} maxLength={1000} multiline scrollEnabled />
             <Pressable disabled={editingMessageId ? savingEdit || !editDraft.trim() : sending || !draft.trim()} style={({ pressed }) => [s.sendButton, (editingMessageId ? savingEdit || !editDraft.trim() : sending || !draft.trim()) && s.sendDisabled, pressed && s.sendPressed]} onPress={editingMessageId ? saveEditedMessage : sendMessage}>{editingMessageId && savingEdit ? <ActivityIndicator size="small" color="#FFF" /> : <Feather name={editingMessageId ? 'check' : 'send'} size={17} color="#FFF" />}</Pressable>
           </View>
         </View>
@@ -407,16 +641,17 @@ export function SchoolsScreen({ joinedSchoolIds, onToggleJoin }: Props) {
           <Pressable style={s.secondaryButton} onPress={() => openUrl(selected.website)}><Text style={s.secondaryText}>Official website</Text></Pressable>
           <Pressable style={s.primaryButton} onPress={() => openUrl(selected.admissionsUrl)}><Text style={s.primaryText}>Apply</Text><Feather name="external-link" size={15} color="#FFF" /></Pressable>
         </View>
-        <Text style={s.source}>Information verified against the official Almaty International School / QSI website.</Text>
+        <Text style={s.source}>Information verified against the official {selected.name} website.</Text>
       </View>
       </> : null}
+      </Animated.View>
     </ScrollView>
     </KeyboardAvoidingView>
     <Modal visible={!!profileMember} transparent animationType="fade" onRequestClose={() => setProfileMember(null)}>
       <View style={s.profileBackdrop}>
         <Pressable style={StyleSheet.absoluteFill} onPress={() => setProfileMember(null)} accessibilityLabel="Close student profile" />
         {profileMember ? <View style={[s.memberProfile, isDark && d.memberProfile]}>
-          <View style={s.profileSheetHeader}><Text style={[s.profileSheetLabel, isDark && d.link]}>AIS STUDENT PROFILE</Text><Pressable style={[s.profileClose, isDark && d.accent]} onPress={() => setProfileMember(null)}><Feather name="x" size={19} color={isDark ? '#E8ECF7' : '#536078'} /></Pressable></View>
+          <View style={s.profileSheetHeader}><Text style={[s.profileSheetLabel, isDark && d.link]}>{selected?.shortName ?? 'SCHOOL'} STUDENT PROFILE</Text><Pressable style={[s.profileClose, isDark && d.accent]} onPress={() => setProfileMember(null)}><Feather name="x" size={19} color={isDark ? '#E8ECF7' : '#536078'} /></Pressable></View>
           <View style={s.memberIdentity}><View style={s.memberAvatar}><Text style={s.memberAvatarText}>{(profileMember.name || profileMember.username || 'S').slice(0, 1).toUpperCase()}</Text></View><View style={s.memberIdentityCopy}><Text style={[s.memberProfileName, isDark && d.text]}>{profileMember.name || 'Student'}</Text><Text style={[s.memberUsername, isDark && d.muted]}>@{profileMember.username || 'student'} · Grade {profileMember.grade || '—'}</Text></View></View>
           <View style={s.memberStats}><View style={[s.memberStat, isDark && d.memberStat]}><Text style={[s.memberStatValue, isDark && d.text]}>{profileMember.gpa || '—'}</Text><Text style={[s.memberStatLabel, isDark && d.muted]}>GPA</Text></View><View style={[s.memberStat, isDark && d.memberStat]}><Text style={[s.memberStatValue, isDark && d.text]}>{profileMember.sat || profileMember.psat || '—'}</Text><Text style={[s.memberStatLabel, isDark && d.muted]}>{profileMember.sat ? 'SAT' : profileMember.psat ? 'PSAT' : 'TEST'}</Text></View><View style={[s.memberStat, isDark && d.memberStat]}><View style={s.memberStreakValue}><Feather name="zap" size={15} color="#D96420" /><Text style={[s.memberStatValue, isDark && d.text]}>{profileMember.dailySatStreak ?? 0}</Text></View><Text style={[s.memberStatLabel, isDark && d.muted]}>STREAK</Text></View></View>
           {profileMember.shareProfileDetails && profileMember.bio ? <View style={s.profileSection}><Text style={[s.profileSectionTitle, isDark && d.text]}>About</Text><Text style={[s.profileBio, isDark && d.muted]}>{profileMember.bio}</Text></View> : null}
@@ -428,7 +663,24 @@ export function SchoolsScreen({ joinedSchoolIds, onToggleJoin }: Props) {
               {profileMember.gmail ? <Pressable style={[s.profileContact, isDark && d.memberStat]} onPress={() => openUrl(`mailto:${profileMember.gmail}`)}><Feather name="mail" size={17} color="#D06055" /><Text style={[s.profileContactText, isDark && d.text]}>{profileMember.gmail}</Text><Feather name="external-link" size={13} color="#8B94A7" /></Pressable> : null}
             </View> : <View style={[s.privateDetails, isDark && d.memberStat]}><Feather name="lock" size={15} color={isDark ? '#8F9BB1' : '#8790A2'} /><Text style={[s.privateDetailsText, isDark && d.muted]}>This student hasn’t shared contact details.</Text></View>}
           </View>
+          {profileMember.id !== pb.authStore.record?.id ? <View style={s.moderationActions}>
+            <Pressable style={[s.reportButton, isDark && d.memberStat]} onPress={() => openReport(profileMember)}><Feather name="flag" size={15} color={isDark ? '#C8CEFF' : '#4056C6'} /><Text style={[s.reportButtonText, isDark && d.link]}>Report</Text></Pressable>
+            <Pressable style={s.blockButton} onPress={() => blockMember(profileMember)}><Feather name="user-x" size={15} color="#C7445A" /><Text style={s.blockButtonText}>Block user</Text></Pressable>
+          </View> : null}
         </View> : null}
+      </View>
+    </Modal>
+    <Modal visible={!!reportMember} transparent animationType="fade" onRequestClose={() => setReportMember(null)}>
+      <View style={s.reportBackdrop}>
+        <Pressable style={StyleSheet.absoluteFill} onPress={() => setReportMember(null)} accessibilityLabel="Close report form" />
+        <View style={[s.reportSheet, isDark && d.memberProfile]}>
+          <View style={s.profileSheetHeader}><View><Text style={[s.profileSheetLabel, isDark && d.link]}>REPORT USER</Text><Text style={[s.reportTitle, isDark && d.text]}>{reportMember?.name || reportMember?.username || 'School member'}</Text></View><Pressable style={[s.profileClose, isDark && d.accent]} onPress={() => setReportMember(null)}><Feather name="x" size={19} color={isDark ? '#E8ECF7' : '#536078'} /></Pressable></View>
+          <Text style={[s.reportHint, isDark && d.muted]}>Choose the reason that best describes the problem.</Text>
+          <View style={s.reasonList}>{reportReasons.map((reason) => <Pressable key={reason.value} style={[s.reasonButton, isDark && d.memberStat, reportReason === reason.value && s.reasonButtonActive]} onPress={() => setReportReason(reason.value)}><Feather name={reportReason === reason.value ? 'check-circle' : 'circle'} size={16} color={reportReason === reason.value ? '#4056C6' : '#8B94A7'} /><Text style={[s.reasonText, isDark && d.text]}>{reason.label}</Text></Pressable>)}</View>
+          <TextInput style={[s.reportInput, isDark && d.memberStat, isDark && d.text]} value={reportDetails} onChangeText={setReportDetails} placeholder="Add details (optional)" placeholderTextColor={isDark ? '#71809C' : '#929BAD'} maxLength={1000} multiline />
+          {reportError ? <Text style={s.communityError}>{reportError}</Text> : null}
+          <Pressable disabled={submittingReport} style={[s.submitReportButton, submittingReport && s.sendDisabled]} onPress={submitReport}>{submittingReport ? <ActivityIndicator color="#FFF" /> : <Text style={s.submitReportText}>Submit report</Text>}</Pressable>
+        </View>
       </View>
     </Modal>
   </Animated.View>;
@@ -466,11 +718,11 @@ const s = StyleSheet.create({
   stat: { flex: 1, backgroundColor: '#FFF', borderRadius: 14, paddingVertical: 13, paddingHorizontal: 8, alignItems: 'center', borderWidth: 1, borderColor: '#E5E8F0' },
   statValue: { color: '#4056C6', fontSize: 18, fontWeight: '900' },
   statLabel: { color: '#7A8498', fontSize: 9, fontWeight: '800', marginTop: 4, textAlign: 'center' },
-  schoolTabs: { flexDirection: 'row', gap: 5, backgroundColor: '#E9ECF4', borderRadius: 17, padding: 5, marginBottom: 16, borderWidth: 1, borderColor: '#DDE1EA' },
-  schoolTab: { flex: 1, minHeight: 47, borderRadius: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 },
+  schoolTabs: { flexDirection: 'row', gap: 5, backgroundColor: '#E9ECF4', borderRadius: 15, padding: 5, marginBottom: 18, borderWidth: 1, borderColor: '#DDE1EA' },
+  schoolTab: { flex: 1, minHeight: 52, borderRadius: 11, alignItems: 'center', justifyContent: 'center', gap: 3, paddingHorizontal: 4 },
   schoolTabActive: { backgroundColor: '#4056C6', shadowColor: '#263D9A', shadowOpacity: .2, shadowRadius: 7, shadowOffset: { width: 0, height: 3 }, elevation: 2 },
   schoolTabPressed: { opacity: .82, transform: [{ scale: .985 }] },
-  schoolTabText: { color: '#6F7A91', fontSize: 12, fontWeight: '900' },
+  schoolTabText: { color: '#6F7A91', fontSize: 11, lineHeight: 15, fontWeight: '800', textAlign: 'center' },
   schoolTabTextActive: { color: '#FFF' },
   sectionCard: { backgroundColor: '#FFF', borderRadius: 17, padding: 17, marginBottom: 14, borderWidth: 1, borderColor: '#E5E8F0' },
   sectionTitle: { color: '#263250', fontSize: 17, fontWeight: '900', marginBottom: 12 },
@@ -478,19 +730,19 @@ const s = StyleSheet.create({
   sectionHeading: { flex: 1, minWidth: 0 },
   sectionIcon: { width: 36, height: 36, flexShrink: 0, borderRadius: 11, backgroundColor: '#EEF0FF', alignItems: 'center', justifyContent: 'center' },
   sectionSub: { color: '#8790A2', fontSize: 11, lineHeight: 16, marginTop: -7, marginBottom: 12 },
-  leaderboardCard: { padding: 0, overflow: 'hidden', minHeight: 285, borderWidth: 2, borderColor: '#D4D9FF', shadowColor: '#4056C6', shadowOpacity: .15, shadowRadius: 18, shadowOffset: { width: 0, height: 8 }, elevation: 4 },
-  leaderboardHeader: { flexDirection: 'row', alignItems: 'center', gap: 13, backgroundColor: '#F0F2FF', paddingHorizontal: 18, paddingVertical: 18, borderBottomWidth: 1, borderBottomColor: '#D9DEFF' },
-  leaderboardIcon: { width: 50, height: 50, borderRadius: 16, backgroundColor: '#4056C6', alignItems: 'center', justifyContent: 'center', shadowColor: '#4056C6', shadowOpacity: .25, shadowRadius: 9, elevation: 3 },
+  leaderboardCard: { padding: 0, overflow: 'hidden', minHeight: 285, borderWidth: 1, borderColor: '#D4D9FF' },
+  leaderboardHeader: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#F0F2FF', paddingHorizontal: 16, paddingVertical: 15, borderBottomWidth: 1, borderBottomColor: '#D9DEFF' },
+  leaderboardIcon: { width: 42, height: 42, borderRadius: 13, backgroundColor: '#4056C6', alignItems: 'center', justifyContent: 'center' },
   leaderboardEyebrow: { color: '#4056C6', fontSize: 8, fontWeight: '900', letterSpacing: 1 },
-  leaderboardTitle: { color: '#263250', fontSize: 21, fontWeight: '900', marginTop: 2 },
-  leaderboardSub: { color: '#758096', fontSize: 10, lineHeight: 15, marginTop: 3 },
+  leaderboardTitle: { color: '#263250', fontSize: 19, lineHeight: 24, fontWeight: '900', marginTop: 2 },
+  leaderboardSub: { color: '#758096', fontSize: 10, lineHeight: 15, marginTop: 4 },
   rankList: { paddingHorizontal: 14, paddingVertical: 8 },
-  chatCard: { padding: 0, overflow: 'hidden', minHeight: 410, borderColor: '#BFC7FF', borderWidth: 2, shadowColor: '#4056C6', shadowOpacity: .18, shadowRadius: 19, shadowOffset: { width: 0, height: 8 }, elevation: 5 },
-  chatHeader: { flexDirection: 'row', alignItems: 'center', gap: 13, backgroundColor: '#EDF0FF', paddingHorizontal: 18, paddingVertical: 18, borderBottomWidth: 1, borderBottomColor: '#D5DBFF' },
-  chatHeaderIcon: { width: 50, height: 50, borderRadius: 16, backgroundColor: '#4056C6', alignItems: 'center', justifyContent: 'center', shadowColor: '#4056C6', shadowOpacity: .24, shadowRadius: 9, elevation: 3 },
+  chatCard: { padding: 0, overflow: 'hidden', minHeight: 410, borderColor: '#BFC7FF', borderWidth: 1 },
+  chatHeader: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#EDF0FF', paddingHorizontal: 16, paddingVertical: 15, borderBottomWidth: 1, borderBottomColor: '#D5DBFF' },
+  chatHeaderIcon: { width: 42, height: 42, borderRadius: 13, backgroundColor: '#4056C6', alignItems: 'center', justifyContent: 'center' },
   chatEyebrow: { color: '#4056C6', fontSize: 8, fontWeight: '900', letterSpacing: 1 },
-  chatTitle: { color: '#263250', fontSize: 21, fontWeight: '900', marginTop: 2 },
-  chatSubtitle: { color: '#758096', fontSize: 11, marginTop: 3 },
+  chatTitle: { color: '#263250', fontSize: 19, lineHeight: 24, fontWeight: '900', marginTop: 2 },
+  chatSubtitle: { color: '#758096', fontSize: 11, lineHeight: 16, marginTop: 4 },
   memberPill: { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: '#FFF', borderRadius: 12, paddingHorizontal: 9, paddingVertical: 6, borderWidth: 1, borderColor: '#DDE2FF' },
   memberPillText: { color: '#34415E', fontSize: 11, fontWeight: '900' },
   liveDot: { width: 7, height: 7, borderRadius: 4, backgroundColor: '#25B879' },
@@ -541,8 +793,24 @@ const s = StyleSheet.create({
   profileContactText: { flex: 1, color: '#3F4B65', fontSize: 12, fontWeight: '800' },
   privateDetails: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#F5F6F8', borderRadius: 12, padding: 12 },
   privateDetailsText: { flex: 1, color: '#7C879D', fontSize: 11, lineHeight: 16 },
+  moderationActions: { flexDirection: 'row', gap: 9, marginTop: 16 },
+  reportButton: { flex: 1, minHeight: 43, borderRadius: 11, borderWidth: 1, borderColor: '#D8DDEF', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, backgroundColor: '#F7F8FB' },
+  reportButtonText: { color: '#4056C6', fontSize: 12, fontWeight: '900' },
+  blockButton: { flex: 1, minHeight: 43, borderRadius: 11, borderWidth: 1, borderColor: '#EDC8D0', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, backgroundColor: '#FFF6F7' },
+  blockButtonText: { color: '#C7445A', fontSize: 12, fontWeight: '900' },
+  reportBackdrop: { flex: 1, justifyContent: 'center', padding: 18, backgroundColor: 'rgba(9, 14, 28, .68)' },
+  reportSheet: { maxHeight: '92%', backgroundColor: '#FFF', borderRadius: 22, borderWidth: 1, borderColor: '#E4E7EF', padding: 18 },
+  reportTitle: { color: '#263250', fontSize: 20, fontWeight: '900', marginTop: 4 },
+  reportHint: { color: '#7C879D', fontSize: 12, lineHeight: 18, marginBottom: 12 },
+  reasonList: { gap: 7 },
+  reasonButton: { minHeight: 42, borderRadius: 11, borderWidth: 1, borderColor: '#E2E5ED', paddingHorizontal: 12, flexDirection: 'row', alignItems: 'center', gap: 9, backgroundColor: '#F8F9FB' },
+  reasonButtonActive: { borderColor: '#8794F5', backgroundColor: '#EEF0FF' },
+  reasonText: { color: '#3F4B65', fontSize: 12, fontWeight: '800' },
+  reportInput: { minHeight: 92, maxHeight: 150, borderRadius: 12, borderWidth: 1, borderColor: '#E0E4EC', color: '#34415E', padding: 12, textAlignVertical: 'top', marginTop: 12 },
+  submitReportButton: { minHeight: 46, borderRadius: 12, backgroundColor: '#4056C6', alignItems: 'center', justifyContent: 'center', marginTop: 12 },
+  submitReportText: { color: '#FFF', fontWeight: '900' },
   emptyText: { color: '#8790A2', fontSize: 12, lineHeight: 18, textAlign: 'center', paddingVertical: 14 },
-  messageList: { gap: 5, minHeight: 245, maxHeight: 600, paddingHorizontal: 17, paddingTop: 17, paddingBottom: 7 },
+  messageList: { gap: 6, minHeight: 245, paddingHorizontal: 16, paddingTop: 16, paddingBottom: 14 },
   messageRow: { flexDirection: 'row', alignItems: 'flex-end', alignSelf: 'stretch' },
   myMessageRow: { justifyContent: 'flex-end' },
   chatAvatar: { width: 27, height: 27, borderRadius: 14, backgroundColor: '#DDE3FF', alignItems: 'center', justifyContent: 'center', marginRight: 7 },
@@ -570,9 +838,9 @@ const s = StyleSheet.create({
   editingCopy: { flex: 1 },
   editingTitle: { color: '#34415E', fontSize: 11, fontWeight: '900' },
   editingHint: { color: '#7C879D', fontSize: 9, marginTop: 2 },
-  composer: { flexDirection: 'row', alignItems: 'flex-end', backgroundColor: '#F4F5F8', borderRadius: 24, padding: 5, paddingLeft: 8, marginHorizontal: 15, marginTop: 9, borderWidth: 1, borderColor: '#E3E6ED' },
-  chatInput: { flex: 1, minHeight: 40, maxHeight: 100, color: '#34415E', paddingHorizontal: 8, paddingVertical: 9 },
-  sendButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#4056C6', alignItems: 'center', justifyContent: 'center' },
+  composer: { flexDirection: 'row', alignItems: 'flex-end', gap: 6, backgroundColor: '#F4F5F8', borderRadius: 25, padding: 6, paddingLeft: 10, marginHorizontal: 14, marginTop: 12, marginBottom: 14, borderWidth: 1, borderColor: '#E3E6ED' },
+  chatInput: { flex: 1, minHeight: 42, maxHeight: 100, color: '#34415E', paddingHorizontal: 7, paddingVertical: 10 },
+  sendButton: { width: 42, height: 42, borderRadius: 21, backgroundColor: '#4056C6', alignItems: 'center', justifyContent: 'center' },
   sendPressed: { transform: [{ scale: .9 }] },
   sendDisabled: { opacity: .45 },
   communityError: { color: '#C7445A', fontSize: 11, marginHorizontal: 15, marginTop: 8 },

@@ -7,7 +7,7 @@ import { useTheme } from '../lib/theme';
 export type TabKey = 'Home' | 'Explore' | 'Discover' | 'Schools' | 'Profile';
 type IconName = keyof typeof Feather.glyphMap;
 type Props = { active: TabKey; onSelect: (key: TabKey) => void };
-const tabs: { key: TabKey; label: string; icon: IconName }[] = [{ key: 'Home', label: 'Home', icon: 'home' }, { key: 'Explore', label: 'Explore', icon: 'search' }, { key: 'Discover', label: 'Discover', icon: 'compass' }, { key: 'Schools', label: 'Schools', icon: 'book-open' }, { key: 'Profile', label: 'Profile', icon: 'user' }];
+const tabs: { key: TabKey; label: string; icon: IconName }[] = [{ key: 'Home', label: 'Home', icon: 'home' }, { key: 'Explore', label: 'Explore', icon: 'search' }, { key: 'Schools', label: 'Schools', icon: 'book-open' }, { key: 'Discover', label: 'Discover', icon: 'compass' }, { key: 'Profile', label: 'Profile', icon: 'user' }];
 const orbSize = 42;
 
 export function BottomTabBar({ active, onSelect }: Props) {

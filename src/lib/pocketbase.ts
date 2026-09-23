@@ -28,7 +28,7 @@ const authStore = new AsyncAuthStore({
   clear: authStorage.clear,
 });
 
-export const pocketbaseUrl = (process.env.EXPO_PUBLIC_POCKETBASE_URL || 'http://127.0.0.1:8090').replace(/\/+$/, '');
+export const pocketbaseUrl = (process.env.EXPO_PUBLIC_POCKETBASE_URL || 'https://majormap.duckdns.org').replace(/\/+$/, '');
 export const pb = new PocketBase(pocketbaseUrl, authStore);
 export const pocketbaseAuthReady = initialAuth.then(() => undefined);
 

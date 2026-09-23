@@ -18,13 +18,13 @@ const privacySections: Section[] = [
     title: '1. Information we collect',
     paragraphs: [
       'MajorMap collects account information such as your name, username, email address and password credentials. We also collect profile and academic information you provide, including grade, school, GPA, SAT or PSAT scores, interests, saved majors, biography and optional social links.',
-      'When you join a school community, we store that membership and any messages you send. We may also receive basic technical information needed to operate and secure the service, such as request logs and device or session identifiers.',
+      'When you join a school community, we store that membership and any messages you send. We also store the users you choose to block and reports you submit, including the selected reason and optional details. We may also receive basic technical information needed to operate and secure the service, such as request logs and device or session identifiers.',
     ],
   },
   {
     title: '2. How we use information',
     paragraphs: [
-      'We use your information to create and secure your account, personalize major recommendations, save your preferences, provide school communities, display eligible school rankings, deliver chat messages, prevent abuse and maintain the service.',
+      'We use your information to create and secure your account, personalize major recommendations, save your preferences, provide school communities, display eligible school rankings, deliver chat messages, hide blocked users, review reports, prevent abuse and maintain the service.',
     ],
   },
   {
@@ -32,6 +32,7 @@ const privacySections: Section[] = [
     paragraphs: [
       'Signed-in users may see limited public profile information such as your name, username, grade, school, interests and current practice streak. Members of a school community can see the information disclosed when you join, including your name, username, grade, school, GPA and optional test scores. If you enable Share profile details, joined school members can also see your biography and optional Instagram, LinkedIn and public Gmail details. Joined members can see messages you post in that school chat.',
       'Do not post private contact information or anything you do not want other community members to read.',
+      'Your block list is private to your account. Reports are available to you and MajorMap administrators for safety review; they are not displayed on the reported user\'s profile.',
     ],
   },
   {

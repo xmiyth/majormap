@@ -8,6 +8,7 @@
       "web"
     ],
     "version": "1.0.0",
+    "icon": "./major.png",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "androidStatusBar": {
@@ -23,6 +24,11 @@
       "supportsTablet": true
     },
     "android": {
+      "versionCode": 8,
+      "adaptiveIcon": {
+  "foregroundImage": "./major.png",
+  "backgroundColor": "#07111F"
+    },
       "package": "com.majormap.app",
       "edgeToEdgeEnabled": false,
       "softwareKeyboardLayoutMode": "resize"
@@ -35,6 +41,12 @@
       "eas": {
         "projectId": "7bea4965-5120-40d4-b471-6be480a18be9"
       }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/7bea4965-5120-40d4-b471-6be480a18be9"
     }
   }
 }

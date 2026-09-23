@@ -40,3 +40,15 @@ export type QuizQuestion = {
   text: string;
   options: QuizOption[];
 };
+
+export type ModerationUser = {
+  id: string;
+  name?: string;
+  username?: string;
+};
+
+export type BlockedUser = ModerationUser & {
+  blockId: string;
+};
+
+export type ReportReason = 'harassment' | 'spam' | 'impersonation' | 'inappropriate_content' | 'safety' | 'other';
