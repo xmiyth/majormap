@@ -1,5 +1,7 @@
+import { MotionPressable } from './MotionPressable';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Animated, Pressable, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Animated, Platform, StyleSheet, View } from 'react-native';
+import { useReducedMotion } from '../lib/useReducedMotion';
 import { Feather } from '@expo/vector-icons';
 import { dailySatQuestions, SatDifficulty } from '../data/dailySatQuestions';
 import { completeDailySat, DailySatProgress, localDateKey, localWeekKey } from '../lib/dailySat';
@@ -19,6 +21,7 @@ const hash = (value: string) => Array.from(value).reduce((total, character) => (
 
 export function DailySatCard({ progress, userKey, isSignedIn, onComplete, onSignUp }: Props) {
   const { isDark } = useTheme();
+  const reducedMotion = useReducedMotion();
   const [expanded, setExpanded] = useState(false);
   const [attempt, setAttempt] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
@@ -42,17 +45,25 @@ export function DailySatCard({ progress, userKey, isSignedIn, onComplete, onSign
 
   useEffect(() => {
     if (result !== 'celebrating') return;
+    if (reducedMotion) {
+      successScale.setValue(1);
+      successOpacity.setValue(1);
+      burst.setValue(1);
+      const timer = setTimeout(() => setDismissed(true), 2600);
+      return () => clearTimeout(timer);
+    }
     successScale.setValue(.72);
     successOpacity.setValue(0);
     burst.setValue(0);
-    Animated.parallel([
-      Animated.spring(successScale, { toValue: 1, stiffness: 210, damping: 13, mass: .72, useNativeDriver: true }),
-      Animated.timing(successOpacity, { toValue: 1, duration: 220, useNativeDriver: true }),
-      Animated.timing(burst, { toValue: 1, duration: 850, useNativeDriver: true }),
-    ]).start();
+    const animation = Animated.parallel([
+      Animated.spring(successScale, { toValue: 1, stiffness: 210, damping: 18, mass: .72, useNativeDriver: Platform.OS !== 'web', isInteraction: false }),
+      Animated.timing(successOpacity, { toValue: 1, duration: 220, useNativeDriver: Platform.OS !== 'web', isInteraction: false }),
+      Animated.timing(burst, { toValue: 1, duration: 650, useNativeDriver: Platform.OS !== 'web', isInteraction: false }),
+    ]);
+    animation.start();
     const timer = setTimeout(() => setDismissed(true), 2600);
-    return () => clearTimeout(timer);
-  }, [burst, result, successOpacity, successScale]);
+    return () => { clearTimeout(timer); animation.stop(); };
+  }, [burst, result, successOpacity, successScale, reducedMotion]);
 
   if (progress.lastCompleted === today && (!completedNow || dismissed)) return null;
 
@@ -111,7 +122,7 @@ export function DailySatCard({ progress, userKey, isSignedIn, onComplete, onSign
     <Text style={s.teaserTitle}>Complete the daily SAT problem</Text>
     <Text style={s.teaserText}>Get one question right to grow your streak. If you miss, you can try another.</Text>
     <View style={s.teaserDetails}><View style={s.teaserDetail}><Feather name="clock" size={13} color="#DDE2FF" /><Text style={s.teaserDetailText}>About 1 minute</Text></View><View style={s.teaserDetail}><Feather name="shield" size={13} color="#DDE2FF" /><Text style={s.teaserDetailText}>{freezeReady ? 'Freeze ready' : 'Freeze used'}</Text></View></View>
-    <Pressable style={({ pressed }) => [s.openButton, pressed && s.openPressed]} onPress={() => setExpanded(true)}><Text style={s.openButtonText}>Open today’s question</Text><View style={s.openArrow}><Feather name="arrow-right" size={16} color="#4056C6" /></View></Pressable>
+    <MotionPressable style={({ pressed }) => [s.openButton, pressed && s.openPressed]} onPress={() => setExpanded(true)}><Text style={s.openButtonText}>Open today’s question</Text><View style={s.openArrow}><Feather name="arrow-right" size={16} color="#4056C6" /></View></MotionPressable>
   </View>;
 
   return <View style={[s.card, isDark && d.card]}>
@@ -139,17 +150,17 @@ export function DailySatCard({ progress, userKey, isSignedIn, onComplete, onSign
       const picked = selected === index;
       const revealCorrect = result === 'wrong' && index === question.answer;
       const revealWrong = result === 'wrong' && picked && index !== question.answer;
-      return <Pressable key={option} disabled={result !== 'idle'} onPress={() => setSelected(index)} style={({ pressed }) => [s.option, isDark && d.option, picked && s.optionSelected, isDark && picked && d.optionSelected, revealCorrect && s.optionCorrect, revealWrong && s.optionWrong, pressed && s.optionPressed]}>
+      return <MotionPressable key={option} disabled={result !== 'idle'} onPress={() => setSelected(index)} style={({ pressed }) => [s.option, isDark && d.option, picked && s.optionSelected, isDark && picked && d.optionSelected, revealCorrect && s.optionCorrect, revealWrong && s.optionWrong, pressed && s.optionPressed]}>
         <View style={[s.optionMarker, isDark && d.marker, picked && s.markerSelected, revealCorrect && s.markerCorrect, revealWrong && s.markerWrong]}><Text style={[s.markerText, isDark && d.muted, (picked || revealCorrect || revealWrong) && s.markerTextSelected]}>{String.fromCharCode(65 + index)}</Text></View>
         <Text style={[s.optionText, isDark && d.text]}>{option}</Text>
         {revealCorrect ? <Feather name="check" size={17} color="#24845F" /> : revealWrong ? <Feather name="x" size={17} color="#C7445A" /> : null}
-      </Pressable>;
+      </MotionPressable>;
     })}</View>
 
     {result === 'wrong' ? <View style={[s.feedback, isDark && d.feedback]}><View style={s.feedbackTitleRow}><Feather name="book-open" size={14} color={isDark ? '#BCC5FF' : '#4056C6'} /><Text style={[s.feedbackTitle, isDark && d.text]}>Review</Text></View><Text style={[s.feedbackText, isDark && d.muted]}>{question.explanation}</Text></View> : null}
     {error ? <Text style={s.error}>{error}</Text> : null}
 
-    {result === 'wrong' ? <Pressable style={s.nextButton} onPress={nextQuestion}><Text style={s.nextText}>Try another question</Text><Feather name="arrow-right" size={16} color="#FFF" /></Pressable> : <Pressable disabled={selected === null || result === 'saving'} style={[s.checkButton, selected === null && s.disabled]} onPress={checkAnswer}>{result === 'saving' ? <ActivityIndicator size="small" color="#FFF" /> : <><Text style={s.checkText}>{isSignedIn ? 'Check answer' : 'Sign up to start your streak'}</Text><Feather name="arrow-right" size={16} color="#FFF" /></>}</Pressable>}
+    {result === 'wrong' ? <MotionPressable style={s.nextButton} onPress={nextQuestion}><Text style={s.nextText}>Try another question</Text><Feather name="arrow-right" size={16} color="#FFF" /></MotionPressable> : <MotionPressable disabled={selected === null || result === 'saving'} style={[s.checkButton, selected === null && s.disabled]} onPress={checkAnswer}>{result === 'saving' ? <ActivityIndicator size="small" color="#FFF" /> : <><Text style={s.checkText}>{isSignedIn ? 'Check answer' : 'Sign up to start your streak'}</Text><Feather name="arrow-right" size={16} color="#FFF" /></>}</MotionPressable>}
     <Text style={[s.disclaimer, isDark && d.muted]}>Original SAT-style practice · Not affiliated with College Board</Text>
   </View>;
 }

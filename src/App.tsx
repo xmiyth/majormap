@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Pressable, View, Animated, Easing, Modal, Platform, SafeAreaView, StatusBar as NativeStatusBar, StyleSheet } from 'react-native';
+import { ActivityIndicator, Pressable, View, Modal, Platform, SafeAreaView, StatusBar as NativeStatusBar, StyleSheet } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as WebBrowser from 'expo-web-browser';
 import { StatusBar } from 'expo-status-bar';
@@ -7,6 +7,10 @@ import { useFonts } from 'expo-font';
 import { IBMPlexSans_500Medium } from '@expo-google-fonts/ibm-plex-sans/500Medium';
 import { IBMPlexSans_600SemiBold } from '@expo-google-fonts/ibm-plex-sans/600SemiBold';
 import { IBMPlexSans_700Bold } from '@expo-google-fonts/ibm-plex-sans/700Bold';
+import { AppHeader } from './components/AppHeader';
+import { SavedScreen } from './screens/SavedScreen';
+import { TabScene } from './components/TabScene';
+import { useReducedMotion } from './lib/useReducedMotion';
 import { BottomTabBar, TabKey } from './components/BottomTabBar';
 import { enableCustomTypography, Text } from './components/Typography';
 import { LoginScreen } from './screens/LoginScreen';
@@ -25,14 +29,15 @@ import { useMajorMap } from './lib/useMajorMap';
 import { MajorDetail } from './components/MajorDetail';
 import { useChallengeAttempts, ChallengeAttempt } from './lib/useChallengeAttempts';
 import { challengeForMajor, MajorChallenge, majorChallenges } from './data/majorChallenges';
-import { MajorChallengeFlow } from './components/MajorChallengeFlow';
+import { MajorExperience } from './components/MajorExperience';
+import { csExperience } from './data/csExperience';
 import { BlockedUser, ModerationUser, ReportReason } from './types';
 import { pb, pocketbaseAuthReady, pocketBaseErrorMessage, PocketBasePublicProfileRecord, PocketBaseUserRecord, pocketbaseUrl } from './lib/pocketbase';
 import { RecordModel } from 'pocketbase';
 
 type Student = Omit<SignUpDetails, 'password'> & { id?: string; bio?: string; instagram?: string; linkedin?: string; gmail?: string; shareProfileDetails?: boolean; interests?: string[]; schoolMemberships?: string[]; dailySatStreak?: number; dailySatBest?: number; dailySatLastCompleted?: string; dailySatFreezeWeek?: string };
 type UserBlockRecord = RecordModel & { blocked: string; blockedName?: string; blockedUsername?: string };
-const tabOrder: TabKey[] = ['Home', 'Explore', 'Discover', 'Schools', 'Profile'];
+const tabOrder: TabKey[] = ['Home', 'Explore', 'Schools', 'Discover', 'Profile'];
 
 const recordToStudent = (record: PocketBaseUserRecord): Student => ({
   id: record.id,
@@ -83,16 +88,21 @@ const studentRecordData = (student: Student) => ({
 export default function App() {
   const [fontsLoaded, fontError] = useFonts({ IBMPlexSans_500Medium, IBMPlexSans_600SemiBold, IBMPlexSans_700Bold });
   const [activeScreen, setActiveScreen] = useState<TabKey>('Home');
+  const [exploreCategory, setExploreCategory] = useState('All');
+  const [exploreRequest, setExploreRequest] = useState(0);
+  const [searchRequest, setSearchRequest] = useState(0);
+  const [showSaved, setShowSaved] = useState(false);
   const [selectedMajor,setSelectedMajor]=useState<Major|null>(null);
   const [interests, setInterests] = useState<string[]>([]);
   const [student, setStudent] = useState<Student | null>(null);
   const map=useMajorMap(student?.id);
   const challenges=useChallengeAttempts(student?.id);
   const [activeChallenge,setActiveChallenge]=useState<MajorChallenge|null>(null);
+  const [viewPreviousChallenge, setViewPreviousChallenge] = useState(false);
   const savedIds=map.savedIds;
   const openMajor=(major:Major)=>{setSelectedMajor(major);};
-  const tryMajor=(major:Major)=>{const challenge=challengeForMajor(major.id);if(challenge){setSelectedMajor(null);setActiveChallenge(challenge);}};
-  const openAttempt=(attempt:ChallengeAttempt)=>{const challenge=majorChallenges.find(item=>item.id===attempt.challengeId);if(challenge)setActiveChallenge(challenge);};
+  const tryMajor=(major:Major)=>{const challenge=challengeForMajor(major.id);if(challenge){setViewPreviousChallenge(false);setSelectedMajor(null);setActiveChallenge(challenge);}};
+  const openAttempt=(attempt:ChallengeAttempt)=>{const challenge=[...majorChallenges,csExperience].find(item=>item.id===attempt.challengeId);if(challenge){setViewPreviousChallenge(true);setActiveChallenge(challenge);}};
   const closeChallenge=()=>{const major=majors.find(item=>item.id===activeChallenge?.majorId);setActiveChallenge(null);if(major)setSelectedMajor(major);};
   const [accounts, setAccounts] = useState<Student[]>([]);
   const [blockedUsers, setBlockedUsers] = useState<BlockedUser[]>([]);
@@ -105,16 +115,9 @@ export default function App() {
   const [signupTarget, setSignupTarget] = useState<TabKey>('Profile');
   const [pendingGoogleProfile, setPendingGoogleProfile] = useState<GoogleSignUpProfile | null>(null);
   const swipe = useRef<{ x: number; y: number } | null>(null);
-  const screenOpacity = useRef(new Animated.Value(1)).current;
-  const screenOffset = useRef(new Animated.Value(0)).current;
-
+  const reducedMotion = useReducedMotion();
   const navigateTo = (nextScreen: TabKey) => {
-    if (nextScreen === activeScreen) return;
-    screenOpacity.stopAnimation();
-    screenOffset.stopAnimation();
-    screenOpacity.setValue(.78);
-    screenOffset.setValue(8);
-    setActiveScreen(nextScreen);
+    if (nextScreen !== activeScreen) setActiveScreen(nextScreen);
   };
 
   const refreshAccounts = async () => {
@@ -162,13 +165,6 @@ export default function App() {
     });
     return () => { active = false; };
   }, []);
-
-  useEffect(() => {
-    Animated.parallel([
-      Animated.timing(screenOpacity, { toValue: 1, duration: 190, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
-      Animated.timing(screenOffset, { toValue: 0, duration: 220, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
-    ]).start();
-  }, [activeScreen, screenOpacity, screenOffset]);
 
   useEffect(() => {
     AsyncStorage.getItem('majormap.theme').then((saved) => {
@@ -473,31 +469,38 @@ export default function App() {
 
   return <ThemeProvider value={{ mode: themeMode, isDark: themeMode === 'dark', setMode: setThemeMode }}><SafeAreaView style={[styles.app, themeMode === 'dark' && styles.appDark]}>
     <StatusBar style={themeMode === 'dark' ? 'light' : 'dark'} backgroundColor={themeMode === 'dark' ? '#080D18' : '#F6F7FB'} translucent={false} />
-    <Animated.View style={[styles.screen, { opacity: screenOpacity, transform: [{ translateY: screenOffset }] }]} onTouchStart={(event) => { swipe.current = { x: event.nativeEvent.pageX, y: event.nativeEvent.pageY }; }} onTouchEnd={(event) => endSwipe(event.nativeEvent.pageX, event.nativeEvent.pageY)}>
-      {activeScreen === 'Home' && <HomeScreen active={map.active} reviewed={map.reviewed} savedCount={savedIds.length} onOpenMajor={openMajor} onTryMajor={tryMajor} onExplore={() => navigateTo('Explore')} onDiscover={() => navigateTo('Discover')} isSignedIn={!!student} userKey={pb.authStore.record?.id ?? 'guest'} dailySatProgress={dailySatProgress} onCompleteDailySat={completeDailySatQuestion} onSignUp={() => openSignUp('Home')} />}
-      {activeScreen === 'Explore' && <ExploreScreen matches={map.active?.results??[]} onOpenMajor={openMajor} savedIds={savedIds} onToggleSave={toggleSaved} isSignedIn={!!student} communityMembers={accounts.filter((account) => !account.id || !blockedUsers.some((blocked) => blocked.id === account.id))} />}
-      {activeScreen === 'Discover' && <DiscoverScreen active={map.active} history={map.history} onSave={map.saveAssessment} onActivate={map.activate} onOpenMajor={openMajor} onTryMajor={tryMajor} onExplore={() => navigateTo('Explore')} isSignedIn={!!student} onSignUp={() => openSignUp('Discover')} />}
-      {activeScreen === 'Schools' && <SchoolsScreen joinedSchoolIds={student?.schoolMemberships ?? []} blockedUserIds={blockedUsers.map((item) => item.id)} onBlockUser={blockUser} onReportUser={reportUser} onToggleJoin={(schoolId) => {
+    <AppHeader active={activeScreen} savedCount={savedIds.length} signedIn={!!student} onHome={() => navigateTo('Home')} onSearch={() => { setExploreCategory('All'); setExploreRequest(value => value + 1); setSearchRequest(value => value + 1); navigateTo('Explore'); }} onSaved={() => setShowSaved(true)} onSettings={() => setShowSettings(true)} />
+    <View style={styles.screen} onTouchStart={(event) => { swipe.current = { x: event.nativeEvent.pageX, y: event.nativeEvent.pageY }; }} onTouchEnd={(event) => endSwipe(event.nativeEvent.pageX, event.nativeEvent.pageY)}>
+      <TabScene active={activeScreen === 'Home'} retain reducedMotion={reducedMotion}><HomeScreen active={map.active} reviewed={map.reviewed} savedCount={savedIds.length} onOpenMajor={openMajor} onTryMajor={tryMajor} onExplore={() => { setExploreCategory('All'); setExploreRequest(value => value + 1); navigateTo('Explore'); }} onExploreInterest={category => { setExploreCategory(category); setExploreRequest(value => value + 1); navigateTo('Explore'); }} onDiscover={() => navigateTo('Discover')} isSignedIn={!!student} userKey={pb.authStore.record?.id ?? 'guest'} dailySatProgress={dailySatProgress} onCompleteDailySat={completeDailySatQuestion} onSignUp={() => openSignUp('Home')} /></TabScene>
+      <TabScene key={`explore:${student?.id ?? 'guest'}`} active={activeScreen === 'Explore'} retain reducedMotion={reducedMotion}><ExploreScreen searchRequest={searchRequest} resetRequest={exploreRequest} initialCategory={exploreCategory} matches={map.active?.results??[]} onOpenMajor={openMajor} savedIds={savedIds} onToggleSave={toggleSaved} isSignedIn={!!student} communityMembers={accounts.filter((account) => !account.id || !blockedUsers.some((blocked) => blocked.id === account.id))} /></TabScene>
+      <TabScene active={activeScreen === 'Discover'} retain reducedMotion={reducedMotion}><DiscoverScreen owner={student?.id} active={map.active} history={map.history} onSave={map.saveAssessment} onActivate={map.activate} onOpenMajor={openMajor} onTryMajor={tryMajor} onExplore={() => navigateTo('Explore')} isSignedIn={!!student} onSignUp={() => openSignUp('Discover')} /></TabScene>
+      <TabScene active={activeScreen === 'Schools'} reducedMotion={reducedMotion}><SchoolsScreen joinedSchoolIds={student?.schoolMemberships ?? []} blockedUserIds={blockedUsers.map((item) => item.id)} onBlockUser={blockUser} onReportUser={reportUser} onToggleJoin={(schoolId) => {
         if (!student) {
           openSignUp('Schools');
           return;
         }
         const currentSchoolId = student.schoolMemberships?.[0];
         updateStudent({ ...student, schoolMemberships: currentSchoolId === schoolId ? [] : [schoolId] });
-      }} />}
-      {activeScreen === 'Profile' && <ProfileScreen onOpenMajor={openMajor} challengeAttempts={challenges.attempts} onOpenAttempt={openAttempt} onUpdateStudent={updateStudent} savedCount={savedIds.length} savedIds={savedIds} onToggleSave={toggleSaved} student={student} interests={interests} onUpdateInterests={(next) => { setInterests(next); if (student) updateStudent({ ...student, interests: next }); }} onSignUp={() => openSignUp('Profile')} onSignOut={signOut} onExplore={() => navigateTo('Explore')} onOpenSettings={() => setShowSettings(true)} />}
-    </Animated.View>
+      }} /></TabScene>
+      <TabScene active={activeScreen === 'Profile'} reducedMotion={reducedMotion}><ProfileScreen onOpenMajor={openMajor} challengeAttempts={challenges.attempts} onOpenAttempt={openAttempt} onUpdateStudent={updateStudent} savedCount={savedIds.length} savedIds={savedIds} onToggleSave={toggleSaved} student={student} interests={interests} onUpdateInterests={(next) => { setInterests(next); if (student) updateStudent({ ...student, interests: next }); }} onSignUp={() => openSignUp('Profile')} onSignOut={signOut} onExplore={() => navigateTo('Explore')} onOpenSettings={() => setShowSettings(true)} /></TabScene>
+    </View>
     {(map.loading||challenges.loading)&&<View style={styles.backendNotice}><Text style={styles.backendLoading}>Loading your MajorMap…</Text></View>}
     {!!backendMessage&&backendMessage!==dismissedBackendMessage&&<View style={[styles.backendNotice,themeMode==='dark'&&styles.backendNoticeDark]}><Text accessibilityRole="alert" style={[styles.backendError,themeMode==='dark'&&styles.backendErrorDark]}>{backendMessage}</Text><View style={styles.backendActions}><Pressable onPress={()=>{setDismissedBackendMessage('');setPersistenceError('');map.reload();challenges.reload();}}><Text style={styles.backendAction}>Retry</Text></Pressable><Pressable onPress={()=>{setDismissedBackendMessage(backendMessage);setPersistenceError('');}}><Text style={styles.backendAction}>Dismiss</Text></Pressable></View></View>}
     <MajorDetail hasAssessment={!!map.active} reviewed={map.reviewed} selected={selectedMajor} setSelected={openMajor} onClose={()=>setSelectedMajor(null)} savedIds={savedIds} onToggleSave={toggleSaved} isSignedIn={!!student} communityMembers={accounts.filter(a=>!blockedUsers.some(b=>b.id===a.id))} attempts={challenges.attempts} matchScore={map.active?.results.find(result=>result.majorId===selectedMajor?.id)?.score} onTryMajor={tryMajor} onReviewed={async()=>{if(selectedMajor)try{await map.markReviewed(selectedMajor.id);setPersistenceError('');}catch(e){setPersistenceError(e instanceof Error?e.message:'Could not save checklist.');}}} error={persistenceError}/>
-    <MajorChallengeFlow challenge={activeChallenge} attempts={challenges.attempts} isSignedIn={!!student} onClose={closeChallenge} onSignIn={()=>openSignUp(activeScreen)} onComplete={challenges.complete} onTryAnother={()=>{setActiveChallenge(null);navigateTo('Explore');}} />
+    <MajorExperience challenge={activeChallenge} owner={student?.id} viewPrevious={viewPreviousChallenge} attempts={challenges.attempts} onClose={closeChallenge} onSignIn={()=>openSignUp(activeScreen)} onComplete={challenges.complete} onTryAnother={()=>{setActiveChallenge(null);navigateTo('Explore');}} />
     <BottomTabBar active={activeScreen} onSelect={navigateTo} />
-    <Modal visible={showSignUp} animationType="slide" onRequestClose={() => setShowSignUp(false)}>
-      <SafeAreaView style={styles.signup}>
-        {loginMode ? <LoginScreen onLogin={login} onGoogleLogin={loginWithGoogle} onSignUp={() => setLoginMode(false)} /> : <SignUpScreen onComplete={finishSignUp} onCompleteGoogle={finishGoogleSignUp} initialGoogleProfile={pendingGoogleProfile} onLogin={() => setLoginMode(true)} />}
+    <Modal visible={showSaved} animationType={reducedMotion ? "none" : "slide"} onRequestClose={() => setShowSaved(false)}>
+      <SafeAreaView style={[styles.app, themeMode === 'dark' && styles.appDark]}>
+        <View style={styles.savedHeader}><Text accessibilityRole="header" style={[styles.savedTitle, themeMode === 'dark' && styles.loadingTextDark]}>Saved majors</Text><Pressable accessibilityRole="button" accessibilityLabel="Close saved majors" style={styles.savedClose} onPress={() => setShowSaved(false)}><Text style={styles.backendAction}>Done</Text></Pressable></View>
+        <SavedScreen savedIds={savedIds} onOpenMajor={major => { setShowSaved(false); openMajor(major); }} onToggleSave={toggleSaved} onExplore={() => { setShowSaved(false); navigateTo('Explore'); }} />
       </SafeAreaView>
     </Modal>
-    <Modal visible={showSettings && !!student} animationType="slide" onRequestClose={() => setShowSettings(false)}>
+    <Modal visible={showSignUp} animationType={reducedMotion ? "none" : "slide"} onRequestClose={() => setShowSignUp(false)}>
+      <SafeAreaView style={styles.signup}>
+        {loginMode ? <LoginScreen onLogin={login} onGoogleLogin={loginWithGoogle} onSignUp={() => setLoginMode(false)} /> : <SignUpScreen onComplete={finishSignUp} onCompleteGoogle={finishGoogleSignUp} initialGoogleProfile={pendingGoogleProfile} onLogin={() => setLoginMode(true)} onBack={() => setShowSignUp(false)} />}
+      </SafeAreaView>
+    </Modal>
+    <Modal visible={showSettings && !!student} animationType={reducedMotion ? "none" : "slide"} onRequestClose={() => setShowSettings(false)}>
       {student ? <SettingsScreen student={student} blockedUsers={blockedUsers} onUnblockUser={unblockUser} onClose={() => setShowSettings(false)} onSignOut={signOut} onChangePassword={changePassword} onDeleteAccount={deleteAccount} onUpdateAcademics={updateAcademics} onLeaveSchool={(schoolId) => {
         const current = student.schoolMemberships ?? [];
         updateStudent({ ...student, schoolMemberships: current.filter((id) => id !== schoolId) });
@@ -507,6 +510,9 @@ export default function App() {
 }
 
 const styles = StyleSheet.create({
+  savedHeader: { minHeight: 60, paddingLeft: 20, paddingRight: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  savedTitle: { fontSize: 22, fontWeight: '600', color: '#182343' },
+  savedClose: { minHeight: 48, minWidth: 60, alignItems: 'center', justifyContent: 'center' },
   app: { flex: 1, backgroundColor: '#F6F7FB', paddingTop: Platform.OS === 'android' ? NativeStatusBar.currentHeight ?? 24 : 0 },
   signup: { flex: 1, backgroundColor: '#4056C6' },
   screen: { flex: 1 },

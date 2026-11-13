@@ -13,6 +13,7 @@ export type Major = {
   apCourses: string[];
   related: string[];
   specializations?: string[];
+  searchTerms?: string[];
   color: string;
 };
 

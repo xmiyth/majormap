@@ -1,5 +1,6 @@
+import { MotionPressable } from '../components/MotionPressable';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { AccessibilityInfo, Animated, Easing, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { AccessibilityInfo, Animated, Easing, ScrollView, StyleSheet, View } from 'react-native';
 import { Text } from '../components/Typography';
 import { MatchResults } from '../components/MatchResults';
 import { Answers, dimensions, MODEL_VERSION, questions, rankMajors } from '../lib/matching';
@@ -9,6 +10,7 @@ import { Major } from '../types';
 import { useTheme } from '../lib/theme';
 
 type Props = {
+  owner?: string;
   isSignedIn: boolean;
   onSignUp: () => void;
   onExplore: () => void;
@@ -20,11 +22,11 @@ type Props = {
   onActivate: (assessment: Assessment) => Promise<void>;
 };
 
-export function DiscoverScreen({ isSignedIn, onSignUp, onOpenMajor, onTryMajor, history, active, onSave, onActivate }: Props) {
+export function DiscoverScreen({ owner, isSignedIn, onSignUp, onOpenMajor, onTryMajor, history, active, onSave, onActivate }: Props) {
   const { isDark } = useTheme();
   const [answers, setAnswers] = useState<Answers>({});
   const [index, setIndex] = useState(0);
-  const [part, setPart] = useState<'interest' | 'experience'>('interest');
+  const [reviewOpen, setReviewOpen] = useState(false);
   const [finished, setFinished] = useState(false);
   const [taking, setTaking] = useState(!active);
   const [selected, setSelected] = useState<Assessment>();
@@ -42,6 +44,20 @@ export function DiscoverScreen({ isSignedIn, onSignUp, onOpenMajor, onTryMajor, 
   const mounted = useRef(true);
   const reducedMotion = useRef(false);
   const scroll = useRef<ScrollView>(null);
+  const previousOwner = useRef(owner);
+  useEffect(() => {
+    // Carry a guest test through sign-in, but never expose an account's answers
+    // after sign-out or a switch to another account.
+    if (previousOwner.current && previousOwner.current !== owner) {
+      animation.current?.stop();
+      if (frame.current !== null) cancelAnimationFrame(frame.current);
+      locked.current = false; setTransitioning(false); setEntering(0);
+      opacity.setValue(1); offset.setValue(0);
+      setAnswers({}); setIndex(0); setFinished(false); setTaking(true);
+      setSelected(undefined); setPending(undefined); setReviewOpen(false); setError('');
+    }
+    previousOwner.current = owner;
+  }, [owner]);
 
   useEffect(() => {
     mounted.current = true;
@@ -65,9 +81,8 @@ export function DiscoverScreen({ isSignedIn, onSignUp, onOpenMajor, onTryMajor, 
     if (active && !Object.keys(answers).length) setTaking(false);
   }, [active?.id]);
 
-  const dimension = dimensions[index];
-  const interestQuestion = questions[index * 2];
-  const evidenceQuestion = questions[index * 2 + 1];
+  const dimension = dimensions[Math.floor(index / 2)];
+  const question = questions[index];
   const snapshot = selected ?? active;
   const shown = useMemo(() => snapshot ? withCurrentScores(snapshot) : undefined, [snapshot]);
   const preview = useMemo(() => finished ? rankMajors(answers) : [], [finished, answers]);
@@ -128,16 +143,14 @@ export function DiscoverScreen({ isSignedIn, onSignUp, onOpenMajor, onTryMajor, 
 
   function advance() {
     transition(() => {
-      if (part === 'interest') setPart('experience');
-      else if (index === dimensions.length - 1) setFinished(true);
-      else { setIndex(current => current + 1); setPart('interest'); }
+      if (index === questions.length - 1) setFinished(true);
+      else setIndex(current => current + 1);
     });
   }
 
   function goBack() {
     transition(() => {
-      if (part === 'experience') setPart('interest');
-      else if (index > 0) { setIndex(current => current - 1); setPart('experience'); }
+      if (index > 0) setIndex(current => current - 1);
     });
   }
 
@@ -162,25 +175,36 @@ export function DiscoverScreen({ isSignedIn, onSignUp, onOpenMajor, onTryMajor, 
   }
 
   function retake() {
-    setAnswers({}); setIndex(0); setPart('interest'); setFinished(false); setTaking(true);
+    setAnswers({}); setIndex(0); setReviewOpen(false); setFinished(false); setTaking(true);
     setSelected(undefined); setPending(undefined); setError(''); setHistoryOpen(false);
     scroll.current?.scrollTo({ y: 0, animated: false });
   }
 
   const button = (label: string, action: () => void, primary = false) => (
-    <Pressable accessibilityRole="button" disabled={busy || transitioning} onPress={action}
+    <MotionPressable accessibilityRole="button" disabled={busy || transitioning} onPress={action}
       style={({ pressed }) => [s.action, isDark && d.surface, primary && s.primary, pressed && s.pressed, (busy || transitioning) && s.disabled]}>
       <Text style={[s.actionText, isDark && d.accent, primary && s.white]}>{label}</Text>
-    </Pressable>
+    </MotionPressable>
   );
 
   return <ScrollView ref={scroll} style={[s.page, isDark && d.page]} contentContainerStyle={s.content} showsVerticalScrollIndicator={false}>
     <View style={s.header}>
-      <Text style={[s.title, isDark && d.text]}>{inQuiz ? 'Discover' : 'Your major matches'}</Text>
+      {!inQuiz && <Text style={[s.title, isDark && d.text]}>Your major matches</Text>}
       <Text style={[s.intro, isDark && d.muted]}>{inQuiz
-        ? 'Tell us what interests you and what you have tried.'
+        ? '24 quick questions. Pick what feels true for you. No right or wrong answers.'
         : 'Compare your interests with these fields of study.'}</Text>
     </View>
+
+    {!inQuiz && <View style={[s.notice, isDark && d.surface]}>
+      <Text style={[s.sectionTitle, isDark && d.text]}>Your discovery map is ready!</Text>
+      <Text style={[s.body, isDark && d.muted]}>Revisit your answers or take the full test again whenever your interests change.</Text>
+      {button('Retake test', retake, true)}
+      {button(reviewOpen ? 'Hide answers' : 'View my answers', () => setReviewOpen(value => !value))}
+      {reviewOpen && questions.map((item, i) => {
+        const value = (taking ? answers : shown?.answers ?? answers)[item.id];
+        return <View key={item.id} style={s.reviewRow}><Text style={[s.body, isDark && d.text]}>{i + 1}. {item.text}</Text><Text style={[s.actionText, isDark && d.accent]}>{item.options.find(option => option.id === value)?.label ?? 'Not answered'}</Text></View>;
+      })}
+    </View>}
 
     {pending && <View style={[s.notice, isDark && d.surface]}>
       <Text style={[s.sectionTitle, isDark && d.text]}>Replace your active MajorMap?</Text>
@@ -192,44 +216,29 @@ export function DiscoverScreen({ isSignedIn, onSignUp, onOpenMajor, onTryMajor, 
 
     {inQuiz && <View style={s.progressSection}>
       <View style={s.row}>
-        <Text style={[s.progressLabel, isDark && d.text]}>Activity {index + 1} of {dimensions.length}</Text>
-        <Text style={[s.caption, isDark && d.muted]}>{part === 'interest' ? 'Interest' : 'Experience'}</Text>
+        <Text style={[s.progressLabel, isDark && d.text]}>Question {index + 1} of {questions.length}</Text>
+        <Text style={[s.caption, isDark && d.muted]}>{Math.round(Object.keys(answers).length / questions.length * 100)}% explored</Text>
       </View>
-      <View accessibilityRole="progressbar" accessibilityValue={{ min: 0, max: dimensions.length, now: index + 1 }} style={[s.track, isDark && d.track]}>
-        <View style={[s.progress, { width: `${(index + 1) / dimensions.length * 100}%` }]} />
+      <View accessibilityRole="progressbar" accessibilityValue={{ min: 0, max: questions.length, now: Object.keys(answers).length }} style={[s.track, isDark && d.track]}>
+        <View style={[s.progress, { width: `${Object.keys(answers).length / questions.length * 100}%` }]} />
       </View>
     </View>}
 
     <Animated.View style={{ opacity, transform: [{ translateY: offset }] }}>
       {inQuiz && <View style={s.questionCard}>
         <Text style={[s.topic, isDark && d.accent]}>{dimension[1]}</Text>
-        <Text accessibilityRole="header" accessibilityLiveRegion="polite" style={[s.question, isDark && d.text]}>{dimension[2]}.</Text>
-        {part === 'interest' && <><Text style={[s.partLabel, isDark && d.text]}>How appealing does this sound?</Text>
-        <View style={s.options}>{interestQuestion.options.map(option => {
-          const chosen = answers[interestQuestion.id] === option.id;
-          return <Pressable key={option.id} accessibilityRole="radio" accessibilityState={{ selected: chosen, disabled: transitioning }}
-            disabled={transitioning} onPress={() => choose(interestQuestion.id, option.id)}
+        <Text accessibilityRole="header" accessibilityLiveRegion="polite" style={[s.question, isDark && d.text]}>{question.text}</Text>
+        <View style={s.options}>{question.options.map(option => {
+          const chosen = answers[question.id] === option.id;
+          return <MotionPressable key={option.id} accessibilityRole="radio" accessibilityLabel={option.label} accessibilityState={{ selected: chosen, disabled: transitioning }}
+            disabled={transitioning} onPress={() => choose(question.id, option.id)}
             style={({ pressed }) => [s.option, isDark && d.option, chosen && s.selected, isDark && chosen && d.selected, pressed && s.pressed]}>
-            <View style={[s.radio, isDark && d.radio, chosen && s.radioSelected]}>{chosen && <View style={s.radioDot} />}</View>
             <Text style={[s.optionText, isDark && d.text, chosen && s.selectedText, isDark && chosen && d.accent]}>{option.label}</Text>
-            <Text style={[s.check, isDark && d.accent]}>{chosen ? '✓' : ' '}</Text>
-          </Pressable>;
+            {chosen && <Text style={[s.selectedText, isDark && d.accent]}>Selected</Text>}
+          </MotionPressable>;
         })}</View>
-        </>}
-        {part === 'experience' && <><Text style={[s.partLabel, isDark && d.text]}>What experience informs your answer?</Text>
-        <View style={s.options}>{evidenceQuestion.options.map(option => {
-          const chosen = answers[evidenceQuestion.id] === option.id;
-          return <Pressable key={option.id} accessibilityRole="radio" accessibilityState={{ selected: chosen, disabled: transitioning }}
-            disabled={transitioning} onPress={() => choose(evidenceQuestion.id, option.id)}
-            style={({ pressed }) => [s.option, isDark && d.option, chosen && s.selected, isDark && chosen && d.selected, pressed && s.pressed]}>
-            <View style={[s.radio, isDark && d.radio, chosen && s.radioSelected]}>{chosen && <View style={s.radioDot} />}</View>
-            <Text style={[s.optionText, isDark && d.text, chosen && s.selectedText, isDark && chosen && d.accent]}>{option.label}</Text>
-            <Text style={[s.check, isDark && d.accent]}>{chosen ? '✓' : ' '}</Text>
-          </Pressable>;
-        })}</View>
-        <Text style={[s.hint, isDark && d.muted]}>Experience adds context. Being new to something is okay, and “not sure” stays unmeasured.</Text>
-        </>}
-        {(part === 'experience' || index > 0) && button('Back', goBack)}
+        <Text accessibilityLiveRegion="polite" style={[s.hint, isDark && d.muted]}>{index < 6 ? 'Every answer adds a piece to your map.' : index < 12 ? 'First milestone reached! Keep discovering.' : index < 18 ? 'Halfway there. Your map is taking shape.' : 'Final stretch! Your matches are coming up.'}</Text>
+        {index > 0 && button('Back', goBack)}
       </View>}
 
       {taking && finished && <>
@@ -239,7 +248,7 @@ export function DiscoverScreen({ isSignedIn, onSignUp, onOpenMajor, onTryMajor, 
           <Text style={[s.sectionTitle, isDark && d.text]}>Save your results</Text>
           <Text style={[s.body, isDark && d.muted]}>Save this assessment to revisit your matches and personalize your MajorMap.</Text>
           {isSignedIn ? button(busy ? 'Saving...' : 'Save assessment', () => void save(), true) : button('Sign in to save your MajorMap', onSignUp, true)}
-          {button('Review answers', () => { setFinished(false); setIndex(0); setPart('interest'); scroll.current?.scrollTo({ y: 0, animated: false }); })}
+          {button('Review answers', () => { setFinished(false); setIndex(0); setReviewOpen(false); scroll.current?.scrollTo({ y: 0, animated: false }); })}
         </View>
       </>}
 
@@ -253,12 +262,11 @@ export function DiscoverScreen({ isSignedIn, onSignUp, onOpenMajor, onTryMajor, 
     </Animated.View>
 
     {!!error && !pending && <Text accessibilityRole="alert" style={[s.error, isDark && d.error]}>{error}</Text>}
-    {(!taking || finished) && button('Retake Discover', retake)}
     {history.length > 0 && !inQuiz && <View style={s.history}>
-      <Pressable accessibilityRole="button" accessibilityState={{ expanded: historyOpen }} onPress={() => setHistoryOpen(value => !value)} style={s.row}>
+      <MotionPressable accessibilityRole="button" accessibilityState={{ expanded: historyOpen }} onPress={() => setHistoryOpen(value => !value)} style={s.row}>
         <Text style={[s.sectionTitle, isDark && d.text]}>Assessment history ({history.length})</Text>
         <Text style={[s.actionText, isDark && d.accent]}>{historyOpen ? 'Hide' : 'View'}</Text>
-      </Pressable>
+      </MotionPressable>
       {historyOpen && history.map(record => <View key={record.id}>{button(
         `${new Date(record.completedAt).toLocaleString()}${record.id === active?.id ? ' · Active' : ''}`,
         () => { setSelected(record); setTaking(false); setPending(undefined); scroll.current?.scrollTo({ y: 0, animated: true }); },
@@ -268,6 +276,8 @@ export function DiscoverScreen({ isSignedIn, onSignUp, onOpenMajor, onTryMajor, 
 }
 
 const s = StyleSheet.create({
+  reviewRow: { paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: '#DDE2EE', gap: 6 },
+
   page: { flex: 1, backgroundColor: '#F6F7FB' },
   content: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 44, maxWidth: 680, width: '100%', alignSelf: 'center' },
   header: { marginBottom: 18 },
@@ -278,8 +288,8 @@ const s = StyleSheet.create({
   progressSection: { marginBottom: 16 },
   progressLabel: { color: '#354160', fontSize: 13, fontWeight: '700' },
   caption: { color: '#7A859A', fontSize: 12 },
-  track: { height: 4, borderRadius: 4, backgroundColor: '#E3E7F2', overflow: 'hidden', marginTop: 9 },
-  progress: { height: '100%', backgroundColor: '#6574E8', borderRadius: 4 },
+  track: { height: 12, borderRadius: 4, backgroundColor: '#E3E7F2', overflow: 'hidden', marginTop: 9 },
+  progress: { height: '100%', backgroundColor: '#64B52A', borderRadius: 8 },
   questionCard: { paddingVertical: 2 },
   topic: { color: '#596BCB', fontSize: 12, fontWeight: '700', marginBottom: 6 },
   question: { color: '#253050', fontSize: 21, lineHeight: 28, fontWeight: '800', marginBottom: 16 },
@@ -287,7 +297,7 @@ const s = StyleSheet.create({
   partLabel: { color:'#69748A',fontSize:12,lineHeight:18,fontWeight:'700',marginBottom:8 },
   experienceLabel: { marginTop: 16, paddingTop: 14, borderTopWidth: 1, borderTopColor: '#E2E6EF' },
   options: { gap: 9 },
-  option: { minHeight: 50, flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: '#E1E5ED', borderRadius: 12, paddingVertical: 13, paddingHorizontal: 15, backgroundColor: '#FFF' },
+  option: { minHeight: 50, flexDirection: 'row', alignItems: 'center', borderWidth: 2, borderBottomWidth: 4, borderColor: '#E1E5ED', borderRadius: 16, paddingVertical: 13, paddingHorizontal: 15, backgroundColor: '#FFF' },
   optionText: { flex: 1, color: '#48536A', fontSize: 15, lineHeight: 21, fontWeight: '600' },
   radio: { display: 'none' },
   radioSelected: { borderColor: '#6574E8', backgroundColor: '#6574E8' },

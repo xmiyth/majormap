@@ -26,6 +26,7 @@ const pb={authStore:{record:{id:'alice'}},filter:(_filter,args)=>args,collection
  delete:async(id)=>{if(failure)throw new Error('Network unavailable');db[name]=db[name].filter(r=>r.id!==id);},
 })};
 Module._load=function(request,parent,isMain){
+ if(request.endsWith('/MotionPressable'))return {MotionPressable:'Pressable'};
  if(request==='react-native')return native;
  if(request.endsWith('/Typography'))return {Text:'Text',TextInput:'TextInput'};
  if(request.endsWith('/theme'))return {useTheme:()=>({isDark:false})};
@@ -41,7 +42,7 @@ const {MatchResults}=require('../src/components/MatchResults.tsx');
 const {MajorChallengeFlow}=require('../src/components/MajorChallengeFlow.tsx');
 Module._load=original;
 const assessment=(id)=>({id,owner:'alice',answers:{},results:[],modelVersion:'test',completedAt:'2026-09-12T00:00:00Z'});
-const text=node=>typeof node==='string'?node:Array.isArray(node)?node.map(text).join(''):node?.props?text(node.props.children):'';
+const text=node=>typeof node==='string'||typeof node==='number'?String(node):Array.isArray(node)?node.map(text).join(''):node?.props?text(node.props.children):'';
 function button(renderer,label){return renderer.root.findAllByType('Pressable').find(n=>text(n).includes(label));}
 function shows(renderer,label){return renderer.root.findAllByType('Text').some(n=>text(n).includes(label));}
 async function press(renderer,label){const b=button(renderer,label);assert.ok(b,`Missing button: ${label}`);await act(async()=>{await b.props.onPress();});}
@@ -50,7 +51,7 @@ test('retake saves history but requires confirmation; cancellation keeps active 
  const first=assessment('first'),second=assessment('second');let saves=0,activations=0,failActivation=false;let renderer;
  const props={isSignedIn:true,onSignUp:()=>{},onExplore:()=>{},onOpenMajor:()=>{},history:[first],active:first,onSave:async()=>{saves++;return second;},onActivate:async()=>{activations++;if(failActivation)throw new Error('Activation failed');}};
  await act(async()=>{renderer=create(React.createElement(DiscoverScreen,props));});
- await press(renderer,'Retake Discover');
+ await press(renderer,'Retake test');
  await finishQuiz(renderer);
  await press(renderer,'Save assessment');assert.equal(saves,1);assert.equal(activations,0);
  await press(renderer,'Keep current MajorMap');assert.equal(activations,0);
@@ -113,10 +114,10 @@ test('answer selection fades automatically into the next focused substep',async(
  const props={isSignedIn:false,history:[],onSignUp:()=>{},onExplore:()=>{},onOpenMajor:()=>{},onActivate:async()=>{},onSave:async()=>assessment('unused')};
  try {
   await act(async()=>{renderer=create(React.createElement(DiscoverScreen,props));});
-  const first=button(renderer,'Very appealing');
+  const first=button(renderer,'A lot');
   await act(async()=>{first.props.onPress();});
-  assert.equal(button(renderer,'Very appealing').props.disabled,true);
-  assert.equal(button(renderer,'Very appealing').props.accessibilityState.selected,true);
+  assert.equal(button(renderer,'A lot').props.disabled,true);
+  assert.equal(button(renderer,'A lot').props.accessibilityState.selected,true);
   assert.equal(button(renderer,'Tried it several times'),undefined);
   assert.equal(animationQueue.length,1);
   deferAnimations=false;await act(async()=>animationQueue.shift()());
@@ -128,9 +129,9 @@ test('reduced motion advances without a fading or sliding animation',async()=>{
  try {
   await act(async()=>{renderer=create(React.createElement(DiscoverScreen,{isSignedIn:false,history:[],onSignUp:()=>{},onExplore:()=>{},onOpenMajor:()=>{},onActivate:async()=>{},onSave:async()=>assessment('unused')}));});
   const before=animationRuns.length;
-  await press(renderer,'Very appealing');
+  await press(renderer,'A lot');
   await press(renderer,'Tried it several times');
-  assert.equal(button(renderer,'Very appealing').props.accessibilityState.selected,false);assert.equal(animationRuns.length,before);
+  assert.equal(button(renderer,'A lot').props.accessibilityState.selected,false);assert.equal(animationRuns.length,before);
  }finally{motionReduced=false;await act(async()=>renderer?.unmount());}
 });
 test('result cards explain confidence separately and open the actual major',async()=>{
@@ -151,7 +152,7 @@ test('new question commits while hidden before the entrance animation',async()=>
  let renderer;deferAnimations=true;deferFrames=true;
   try {
   await act(async()=>{renderer=create(React.createElement(DiscoverScreen,{isSignedIn:false,history:[],onSignUp:()=>{},onExplore:()=>{},onOpenMajor:()=>{},onActivate:async()=>{},onSave:async()=>assessment('unused')}));});
-  await press(renderer,'Very appealing');
+  await press(renderer,'A lot');
   deferAnimations=false;await act(async()=>animationQueue.shift()());
   assert.ok(button(renderer,'Tried it several times'));
   assert.equal(button(renderer,'Tried it several times').props.disabled,true);
@@ -221,8 +222,8 @@ test('challenge validation requires all task and core reflection answers',async(
 test('challenge flow navigates forward and back without losing responses',async()=>{
  let renderer;const challenge=majorChallenges[0];
  await act(async()=>{renderer=create(React.createElement(MajorChallengeFlow,{challenge,attempts:[],isSignedIn:true,onClose:()=>{},onSignIn:()=>{},onComplete:async()=>({}),onTryAnother:()=>{}}));});
- await press(renderer,'Start challenge');
- await press(renderer,challenge.questions[0].options[0]);await press(renderer,'Next');
+ await press(renderer,'Start challenge');assert.ok(shows(renderer,'BRIEF LESSON'));await press(renderer,'Try it yourself');
+ await press(renderer,challenge.questions[0].options[0]);await press(renderer,'Next');await press(renderer,'Try it yourself');
  assert.ok(JSON.stringify(renderer.toJSON()).includes(challenge.questions[1].prompt));
  await press(renderer,'Back');assert.ok(JSON.stringify(renderer.toJSON()).includes(challenge.questions[0].prompt));
  assert.ok(button(renderer,challenge.questions[0].options[0]));
@@ -232,15 +233,47 @@ test('completed challenge offers previous result or immutable retake',async()=>{
  let renderer,closed=false;const challenge=majorChallenges[0];const old={id:'old',owner:'a',majorId:challenge.majorId,challengeId:challenge.id,responses:{},completedAt:'2026-09-17',enjoyment:5,difficulty:3,futureInterest:'yes',challengeVersion:1};
  await act(async()=>{renderer=create(React.createElement(MajorChallengeFlow,{challenge,attempts:[old],isSignedIn:true,onClose:()=>{closed=true;},onSignIn:()=>{},onComplete:async()=>({}),onTryAnother:()=>{}}));});
  assert.ok(button(renderer,'View previous result'));assert.ok(button(renderer,'Retake challenge'));assert.ok(button(renderer,'Cancel'));
- await press(renderer,'Retake challenge');assert.ok(JSON.stringify(renderer.toJSON()).includes(challenge.questions[0].prompt));
+ await press(renderer,'Retake challenge');await press(renderer,'Try it yourself');assert.ok(JSON.stringify(renderer.toJSON()).includes(challenge.questions[0].prompt));
  assert.equal(closed,false);await act(async()=>renderer.unmount());
 });
 test('guest challenge responses survive the existing sign-in handoff',async()=>{
  let renderer;const challenge=majorChallenges[0];const props={challenge,attempts:[],isSignedIn:false,onClose:()=>{},onSignIn:()=>{},onComplete:async()=>({}),onTryAnother:()=>{}};
  await act(async()=>{renderer=create(React.createElement(MajorChallengeFlow,props));});
- await press(renderer,'Start challenge');await press(renderer,challenge.questions[0].options[0]);
+ await press(renderer,'Start challenge');assert.ok(shows(renderer,'BRIEF LESSON'));await press(renderer,'Try it yourself');await press(renderer,challenge.questions[0].options[0]);
  await act(async()=>renderer.update(React.createElement(MajorChallengeFlow,{...props,isSignedIn:true})));
- await press(renderer,'Next');assert.ok(JSON.stringify(renderer.toJSON()).includes(challenge.questions[1].prompt));
+ await press(renderer,'Next');await press(renderer,'Try it yourself');assert.ok(JSON.stringify(renderer.toJSON()).includes(challenge.questions[1].prompt));
  await press(renderer,'Back');assert.ok(JSON.stringify(renderer.toJSON()).includes(challenge.questions[0].prompt));
+ await act(async()=>renderer.unmount());
+});
+
+
+test('completed answers remain available across hidden tabs, can be reviewed, and retake starts the full test', async () => {
+ let renderer;
+ const props={owner:'alice',isSignedIn:false,history:[],onSignUp:()=>{},onExplore:()=>{},onOpenMajor:()=>{},onActivate:async()=>{},onSave:async()=>assessment('unused')};
+ function Tabs({tab}) { return React.createElement('View',{style:{display:tab==='Discover'?'flex':'none'}},React.createElement(DiscoverScreen,props)); }
+ await act(async()=>{renderer=create(React.createElement(Tabs,{tab:'Discover'}));});
+ await finishQuiz(renderer);
+ await act(async()=>renderer.update(React.createElement(Tabs,{tab:'Explore'})));
+ await act(async()=>renderer.update(React.createElement(Tabs,{tab:'Discover'})));
+ assert.ok(shows(renderer,'Your discovery map is ready!'));
+ await press(renderer,'View my answers');
+ for(const q of questions) assert.ok(shows(renderer,q.text));
+ assert.ok(shows(renderer,'A lot')); assert.ok(shows(renderer,'Tried it several times'));
+ await press(renderer,'Retake test');
+ assert.ok(shows(renderer,'Question 1 of 24'));
+ assert.equal(button(renderer,'A lot').props.accessibilityState.selected,false);
+ await act(async()=>renderer.unmount());
+});
+
+test('saved answers can be reviewed and account switches clear unsaved quiz answers', async () => {
+ let renderer;
+ const record={...assessment('review'),answers:Object.fromEntries(questions.map(q=>[q.id,q.options[0].id]))};
+ const props={owner:'alice',isSignedIn:true,history:[record],active:record,onSignUp:()=>{},onExplore:()=>{},onOpenMajor:()=>{},onActivate:async()=>{},onSave:async()=>record};
+ await act(async()=>{renderer=create(React.createElement(DiscoverScreen,props));});
+ await press(renderer,'View my answers'); assert.ok(shows(renderer,'A lot'));
+ await press(renderer,'Retake test'); await press(renderer,'A lot');
+ await act(async()=>renderer.update(React.createElement(DiscoverScreen,{...props,owner:'bob',active:undefined,history:[]})));
+ assert.ok(shows(renderer,'Question 1 of 24'));
+ assert.equal(button(renderer,'A lot').props.accessibilityState.selected,false);
  await act(async()=>renderer.unmount());
 });

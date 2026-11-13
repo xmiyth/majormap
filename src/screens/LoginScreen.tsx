@@ -1,5 +1,6 @@
+import { MotionPressable as Pressable } from '../components/MotionPressable';
 import React, { useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { Text, TextInput } from '../components/Typography';
 import { Feather } from '@expo/vector-icons';
 import { useTheme } from '../lib/theme';

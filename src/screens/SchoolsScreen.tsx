@@ -1,5 +1,6 @@
+import { MotionPressable } from '../components/MotionPressable';
 import React, { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Animated, Dimensions, Easing, KeyboardAvoidingView, LayoutAnimation, Linking, Modal, Platform, Pressable, ScrollView, StyleSheet, UIManager, View } from 'react-native';
+import { ActivityIndicator, Alert, Animated, Dimensions, Easing, KeyboardAvoidingView, LayoutAnimation, Linking, Modal, Platform, ScrollView, StyleSheet, UIManager, View } from 'react-native';
 import { Text, TextInput } from '../components/Typography';
 import { Feather } from '@expo/vector-icons';
 import { RecordModel } from 'pocketbase';
@@ -508,8 +509,7 @@ export function SchoolsScreen({ joinedSchoolIds, blockedUserIds, onToggleJoin, o
   const closeSchool = () => Animated.timing(slide, { toValue: width, duration: 250, easing: Easing.in(Easing.cubic), useNativeDriver: true }).start(() => { setProfileMember(null); setSelected(null); });
 
   if (!selected) return <ScrollView style={[s.page, isDark && d.page]} contentContainerStyle={s.content}>
-    <Text style={[s.title, isDark && d.text]}>Schools</Text>
-    {schools.map((school) => <Pressable key={school.id} style={[s.schoolCard, isDark && d.card]} onPress={() => openSchool(school)}>
+    {schools.map((school) => <MotionPressable key={school.id} style={[s.schoolCard, isDark && d.card]} onPress={() => openSchool(school)}>
       <View style={s.monogram}><Text style={s.monogramText}>{school.shortName}</Text></View>
       <View style={s.schoolText}>
         <Text style={[s.schoolName, isDark && d.text]}>{school.name}</Text>
@@ -517,13 +517,13 @@ export function SchoolsScreen({ joinedSchoolIds, blockedUserIds, onToggleJoin, o
         <Text style={[s.meta, isDark && d.muted]}>{school.ages}</Text>
       </View>
       <Feather name="chevron-right" size={22} color="#4056C6" />
-    </Pressable>)}
+    </MotionPressable>)}
   </ScrollView>;
 
   return <Animated.View style={[s.panel, { transform: [{ translateX: slide }] }]}>
     <KeyboardAvoidingView style={s.panel} behavior={Platform.OS === 'ios' ? 'padding' : Platform.OS === 'android' ? 'height' : undefined}>
     <ScrollView ref={schoolScrollRef} style={[s.page, isDark && d.page]} contentContainerStyle={[s.content, schoolTab === 'chat' && s.chatPageContent]} keyboardShouldPersistTaps="handled" keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'} automaticallyAdjustKeyboardInsets={Platform.OS === 'ios'} onContentSizeChange={() => { if (chatInputFocused) schoolScrollRef.current?.scrollToEnd({ animated: true }); }}>
-      {!joined ? <Pressable style={s.back} onPress={closeSchool}><Feather name="arrow-left" size={17} color={isDark ? '#A9B2FF' : '#4056C6'} /><Text style={[s.backText, isDark && d.link]}>Back to schools</Text></Pressable> : null}
+      {!joined ? <MotionPressable style={s.back} onPress={closeSchool}><Feather name="arrow-left" size={17} color={isDark ? '#A9B2FF' : '#4056C6'} /><Text style={[s.backText, isDark && d.link]}>Back to schools</Text></MotionPressable> : null}
 
       <View style={s.hero}>
         <View style={s.heroBadge}><Text style={s.heroBadgeText}>{selected.shortName}</Text></View>
@@ -531,7 +531,7 @@ export function SchoolsScreen({ joinedSchoolIds, blockedUserIds, onToggleJoin, o
         <Text style={s.heroTitle}>{selected.name}</Text>
         <Text style={s.heroLocation}>{selected.location}</Text>
         <Text style={s.heroSummary}>{selected.summary}</Text>
-        <Pressable style={[s.join, joined && s.joined]} onPress={() => onToggleJoin(selected.id)}><Feather name={joined ? 'log-out' : 'plus'} size={16} color={joined ? '#4056C6' : '#FFF'} /><Text style={[s.joinText, joined && s.joinedText]}>{joined ? 'Leave school community' : 'Join school community'}</Text></Pressable>
+        <MotionPressable style={[s.join, joined && s.joined]} onPress={() => onToggleJoin(selected.id)}><Feather name={joined ? 'log-out' : 'plus'} size={16} color={joined ? '#4056C6' : '#FFF'} /><Text style={[s.joinText, joined && s.joinedText]}>{joined ? 'Leave school community' : 'Join school community'}</Text></MotionPressable>
         <Text style={s.joinDisclosure}>Joining shows your school profile, GPA, optional test scores, and streak to {selected.shortName} members. Bio and contact links appear only if you enable sharing in Profile.</Text>
       </View>
 
@@ -548,7 +548,7 @@ export function SchoolsScreen({ joinedSchoolIds, blockedUserIds, onToggleJoin, o
           ['info', 'info', 'Info'],
         ] as const).map(([key, icon, label]) => {
           const active = schoolTab === key;
-          return <Pressable key={key} onPress={() => changeSchoolTab(key)} style={({ pressed }) => [s.schoolTab, active && s.schoolTabActive, isDark && active && d.tabActive, pressed && s.schoolTabPressed]}><Animated.View style={active ? {transform:[{scale:tabIconScale}]} : undefined}><Feather name={icon} size={15} color={active ? '#FFF' : isDark ? '#A7B2C7' : '#6F7A91'} /></Animated.View><Text style={[s.schoolTabText, isDark && d.muted, active && s.schoolTabTextActive]}>{label}</Text></Pressable>;
+          return <MotionPressable key={key} onPress={() => changeSchoolTab(key)} style={({ pressed }) => [s.schoolTab, active && s.schoolTabActive, isDark && active && d.tabActive, pressed && s.schoolTabPressed]}><Animated.View style={active ? {transform:[{scale:tabIconScale}]} : undefined}><Feather name={icon} size={15} color={active ? '#FFF' : isDark ? '#A7B2C7' : '#6F7A91'} /></Animated.View><Text style={[s.schoolTabText, isDark && d.muted, active && s.schoolTabTextActive]}>{label}</Text></MotionPressable>;
         })}
       </View>
 
@@ -562,11 +562,11 @@ export function SchoolsScreen({ joinedSchoolIds, blockedUserIds, onToggleJoin, o
       {schoolTab === 'leaderboard' && joined ? <>
         <View style={[s.sectionCard, s.leaderboardCard, isDark && d.card, isDark && d.leaderboardCard]}>
           <View style={[s.leaderboardHeader, isDark && d.leaderboardHeader]}><View style={s.leaderboardIcon}><Feather name="award" size={24} color="#FFF" /></View><View style={s.sectionHeading}><Text style={[s.leaderboardEyebrow, isDark && d.link]}>{selected.shortName} SCHOOL RANKINGS</Text><Text style={[s.leaderboardTitle, isDark && d.text]}>Student leaderboard</Text><Text style={[s.leaderboardSub, isDark && d.muted]}>{visibleMembers.length} visible student{visibleMembers.length === 1 ? '' : 's'} · GPA, test scores, and daily streaks</Text></View></View>
-          <View style={s.rankList}>{communityLoading && !visibleMembers.length ? <ActivityIndicator color="#4056C6" /> : rankedMembers.length ? rankedMembers.map((member, index) => <Pressable key={member.id} accessibilityRole="button" accessibilityLabel={`View ${member.name || member.username || 'student'} profile`} onPress={() => setProfileMember(member)} style={({ pressed }) => [s.rankRow, index < 3 && s.topRankRow, isDark && index < 3 && d.topRankRow, pressed && s.rankRowPressed]}>
+          <View style={s.rankList}>{communityLoading && !visibleMembers.length ? <ActivityIndicator color="#4056C6" /> : rankedMembers.length ? rankedMembers.map((member, index) => <MotionPressable key={member.id} accessibilityRole="button" accessibilityLabel={`View ${member.name || member.username || 'student'} profile`} onPress={() => setProfileMember(member)} style={({ pressed }) => [s.rankRow, index < 3 && s.topRankRow, isDark && index < 3 && d.topRankRow, pressed && s.rankRowPressed]}>
             <View style={[s.rankNumberBadge, index === 0 && s.firstRankBadge, index === 1 && s.secondRankBadge, index === 2 && s.thirdRankBadge]}><Text style={[s.rankNumber, index < 3 && s.topRankNumber]}>#{index + 1}</Text></View>
             <View style={s.rankIdentity}><Text style={[s.rankName, isDark && d.text]}>{member.name || 'Student'}</Text><Text style={[s.rankHandle, isDark && d.muted]}>@{member.username || 'student'} · Grade {member.grade || '—'}</Text></View>
             <View style={s.rankScores}><Text style={[s.rankGpa, isDark && d.text]}>GPA {member.gpa || '—'}</Text><Text style={[s.rankTest, isDark && d.muted]}>{member.sat ? `SAT ${member.sat}` : member.psat ? `PSAT ${member.psat}` : 'No test score'}</Text><View style={s.rankStreak}><Feather name="zap" size={10} color="#D96420" /><Text style={s.rankStreakText}>{member.dailySatStreak ?? 0} day streak</Text></View></View><Feather name="chevron-right" size={17} color={isDark ? '#71809C' : '#A0A8B7'} />
-          </Pressable>) : <Text style={[s.emptyText, isDark && d.muted]}>No joined students yet.</Text>}</View>
+          </MotionPressable>) : <Text style={[s.emptyText, isDark && d.muted]}>No joined students yet.</Text>}</View>
         </View>
       </> : null}
 
@@ -593,24 +593,24 @@ export function SchoolsScreen({ joinedSchoolIds, blockedUserIds, onToggleJoin, o
               <View style={[s.messageColumn, mine && s.myMessageColumn]}>
                 {!mine ? <Text style={[s.messageSender, isDark && d.muted]}>{senderName}</Text> : null}
                 <View style={[s.bubbleLine, mine && s.myBubbleLine]}>
-                  <Pressable onPress={toggleMessageDetails} onLongPress={toggleMessageDetails} style={({ pressed }) => [s.message, isDark && d.message, mine && s.myMessage, isDark && mine && d.myMessage, pressed && s.messagePressed]}>
+                  <MotionPressable onPress={toggleMessageDetails} onLongPress={toggleMessageDetails} style={({ pressed }) => [s.message, isDark && d.message, mine && s.myMessage, isDark && mine && d.myMessage, pressed && s.messagePressed]}>
                     <Text style={[s.messageBody, isDark && d.text, mine && s.myMessageBody]}>{message.body}</Text>
-                  </Pressable>
+                  </MotionPressable>
                 </View>
                 {actionsOpen ? <Text style={[s.messageTime, mine && s.myMessageTime, isDark && d.messageTime]}>{formatMessageTime(message.created)}{edited ? ' · Edited' : ''}</Text> : null}
                 {mine && actionsOpen ? <View style={[s.messageActions, isDark && d.messageActions]}>
-                  <Pressable style={s.messageAction} onPress={() => startEditingMessage(message)}><Feather name="edit-2" size={14} color={isDark ? '#B7BFFF' : '#4056C6'} /><Text style={[s.messageActionText, isDark && d.link]}>Edit</Text></Pressable>
+                  <MotionPressable style={s.messageAction} onPress={() => startEditingMessage(message)}><Feather name="edit-2" size={14} color={isDark ? '#B7BFFF' : '#4056C6'} /><Text style={[s.messageActionText, isDark && d.link]}>Edit</Text></MotionPressable>
                   <View style={[s.actionDivider, isDark && d.actionDivider]} />
-                  <Pressable disabled={deletingMessageId === message.id} style={s.messageAction} onPress={() => deleteMessage(message)}>{deletingMessageId === message.id ? <ActivityIndicator size="small" color="#C7445A" /> : <><Feather name="trash-2" size={14} color="#C7445A" /><Text style={s.deleteActionText}>Delete</Text></>}</Pressable>
+                  <MotionPressable disabled={deletingMessageId === message.id} style={s.messageAction} onPress={() => deleteMessage(message)}>{deletingMessageId === message.id ? <ActivityIndicator size="small" color="#C7445A" /> : <><Feather name="trash-2" size={14} color="#C7445A" /><Text style={s.deleteActionText}>Delete</Text></>}</MotionPressable>
                 </View> : null}
               </View>
             </View>;
           }) : <View style={s.chatEmpty}><View style={[s.chatEmptyIcon, isDark && d.accent]}><Feather name="send" size={19} color={isDark ? '#B7BFFF' : '#4056C6'} /></View><Text style={[s.emptyText, isDark && d.muted]}>No messages yet. Start the conversation.</Text></View>}</View>
           {communityError ? <Text style={s.communityError}>{communityError}</Text> : null}
-          {editingMessageId ? <View style={[s.editingBanner, isDark && d.editingBanner]}><Feather name="edit-2" size={14} color={isDark ? '#B7BFFF' : '#4056C6'} /><View style={s.editingCopy}><Text style={[s.editingTitle, isDark && d.text]}>Editing message</Text><Text style={[s.editingHint, isDark && d.muted]}>Save to update it for everyone.</Text></View><Pressable hitSlop={8} onPress={cancelEditingMessage}><Feather name="x" size={18} color={isDark ? '#A7B2C7' : '#667188'} /></Pressable></View> : null}
+          {editingMessageId ? <View style={[s.editingBanner, isDark && d.editingBanner]}><Feather name="edit-2" size={14} color={isDark ? '#B7BFFF' : '#4056C6'} /><View style={s.editingCopy}><Text style={[s.editingTitle, isDark && d.text]}>Editing message</Text><Text style={[s.editingHint, isDark && d.muted]}>Save to update it for everyone.</Text></View><MotionPressable hitSlop={8} onPress={cancelEditingMessage}><Feather name="x" size={18} color={isDark ? '#A7B2C7' : '#667188'} /></MotionPressable></View> : null}
           <View style={[s.composer, isDark && d.composer]}>
             <TextInput style={[s.chatInput, isDark && d.text]} value={editingMessageId ? editDraft : draft} onChangeText={editingMessageId ? setEditDraft : setDraft} onFocus={() => { setChatInputFocused(true); revealComposer(); }} onBlur={() => setChatInputFocused(false)} placeholder={editingMessageId ? 'Edit your message' : `Message ${selected.shortName} students`} placeholderTextColor={isDark ? '#71809C' : '#929BAD'} maxLength={1000} multiline scrollEnabled />
-            <Pressable disabled={editingMessageId ? savingEdit || !editDraft.trim() : sending || !draft.trim()} style={({ pressed }) => [s.sendButton, (editingMessageId ? savingEdit || !editDraft.trim() : sending || !draft.trim()) && s.sendDisabled, pressed && s.sendPressed]} onPress={editingMessageId ? saveEditedMessage : sendMessage}>{editingMessageId && savingEdit ? <ActivityIndicator size="small" color="#FFF" /> : <Feather name={editingMessageId ? 'check' : 'send'} size={17} color="#FFF" />}</Pressable>
+            <MotionPressable disabled={editingMessageId ? savingEdit || !editDraft.trim() : sending || !draft.trim()} style={({ pressed }) => [s.sendButton, (editingMessageId ? savingEdit || !editDraft.trim() : sending || !draft.trim()) && s.sendDisabled, pressed && s.sendPressed]} onPress={editingMessageId ? saveEditedMessage : sendMessage}>{editingMessageId && savingEdit ? <ActivityIndicator size="small" color="#FFF" /> : <Feather name={editingMessageId ? 'check' : 'send'} size={17} color="#FFF" />}</MotionPressable>
           </View>
         </View>
       </> : null}
@@ -635,11 +635,11 @@ export function SchoolsScreen({ joinedSchoolIds, blockedUserIds, onToggleJoin, o
         <Text style={[s.sectionTitle, isDark && d.text]}>Contact and admissions</Text>
         <View style={s.contactRow}><Feather name="map-pin" size={17} color="#4056C6" /><Text style={[s.contactText, isDark && d.muted]}>{selected.address}</Text></View>
         <View style={s.contactRow}><Feather name="clock" size={17} color="#4056C6" /><Text style={[s.contactText, isDark && d.muted]}>{selected.hours}</Text></View>
-        <Pressable style={s.contactRow} onPress={() => openUrl(`tel:${selected.phone.replace(/\s/g, '')}`)}><Feather name="phone" size={17} color="#4056C6" /><Text style={[s.contactLink, isDark && d.link]}>{selected.phone}</Text></Pressable>
-        <Pressable style={s.contactRow} onPress={() => openUrl(`mailto:${selected.email}`)}><Feather name="mail" size={17} color="#4056C6" /><Text style={[s.contactLink, isDark && d.link]}>{selected.email}</Text></Pressable>
+        <MotionPressable style={s.contactRow} onPress={() => openUrl(`tel:${selected.phone.replace(/\s/g, '')}`)}><Feather name="phone" size={17} color="#4056C6" /><Text style={[s.contactLink, isDark && d.link]}>{selected.phone}</Text></MotionPressable>
+        <MotionPressable style={s.contactRow} onPress={() => openUrl(`mailto:${selected.email}`)}><Feather name="mail" size={17} color="#4056C6" /><Text style={[s.contactLink, isDark && d.link]}>{selected.email}</Text></MotionPressable>
         <View style={s.actions}>
-          <Pressable style={s.secondaryButton} onPress={() => openUrl(selected.website)}><Text style={s.secondaryText}>Official website</Text></Pressable>
-          <Pressable style={s.primaryButton} onPress={() => openUrl(selected.admissionsUrl)}><Text style={s.primaryText}>Apply</Text><Feather name="external-link" size={15} color="#FFF" /></Pressable>
+          <MotionPressable style={s.secondaryButton} onPress={() => openUrl(selected.website)}><Text style={s.secondaryText}>Official website</Text></MotionPressable>
+          <MotionPressable style={s.primaryButton} onPress={() => openUrl(selected.admissionsUrl)}><Text style={s.primaryText}>Apply</Text><Feather name="external-link" size={15} color="#FFF" /></MotionPressable>
         </View>
         <Text style={s.source}>Information verified against the official {selected.name} website.</Text>
       </View>
@@ -649,37 +649,37 @@ export function SchoolsScreen({ joinedSchoolIds, blockedUserIds, onToggleJoin, o
     </KeyboardAvoidingView>
     <Modal visible={!!profileMember} transparent animationType="fade" onRequestClose={() => setProfileMember(null)}>
       <View style={s.profileBackdrop}>
-        <Pressable style={StyleSheet.absoluteFill} onPress={() => setProfileMember(null)} accessibilityLabel="Close student profile" />
+        <MotionPressable style={StyleSheet.absoluteFill} onPress={() => setProfileMember(null)} accessibilityLabel="Close student profile" />
         {profileMember ? <View style={[s.memberProfile, isDark && d.memberProfile]}>
-          <View style={s.profileSheetHeader}><Text style={[s.profileSheetLabel, isDark && d.link]}>{selected?.shortName ?? 'SCHOOL'} STUDENT PROFILE</Text><Pressable style={[s.profileClose, isDark && d.accent]} onPress={() => setProfileMember(null)}><Feather name="x" size={19} color={isDark ? '#E8ECF7' : '#536078'} /></Pressable></View>
+          <View style={s.profileSheetHeader}><Text style={[s.profileSheetLabel, isDark && d.link]}>{selected?.shortName ?? 'SCHOOL'} STUDENT PROFILE</Text><MotionPressable style={[s.profileClose, isDark && d.accent]} onPress={() => setProfileMember(null)}><Feather name="x" size={19} color={isDark ? '#E8ECF7' : '#536078'} /></MotionPressable></View>
           <View style={s.memberIdentity}><View style={s.memberAvatar}><Text style={s.memberAvatarText}>{(profileMember.name || profileMember.username || 'S').slice(0, 1).toUpperCase()}</Text></View><View style={s.memberIdentityCopy}><Text style={[s.memberProfileName, isDark && d.text]}>{profileMember.name || 'Student'}</Text><Text style={[s.memberUsername, isDark && d.muted]}>@{profileMember.username || 'student'} · Grade {profileMember.grade || '—'}</Text></View></View>
           <View style={s.memberStats}><View style={[s.memberStat, isDark && d.memberStat]}><Text style={[s.memberStatValue, isDark && d.text]}>{profileMember.gpa || '—'}</Text><Text style={[s.memberStatLabel, isDark && d.muted]}>GPA</Text></View><View style={[s.memberStat, isDark && d.memberStat]}><Text style={[s.memberStatValue, isDark && d.text]}>{profileMember.sat || profileMember.psat || '—'}</Text><Text style={[s.memberStatLabel, isDark && d.muted]}>{profileMember.sat ? 'SAT' : profileMember.psat ? 'PSAT' : 'TEST'}</Text></View><View style={[s.memberStat, isDark && d.memberStat]}><View style={s.memberStreakValue}><Feather name="zap" size={15} color="#D96420" /><Text style={[s.memberStatValue, isDark && d.text]}>{profileMember.dailySatStreak ?? 0}</Text></View><Text style={[s.memberStatLabel, isDark && d.muted]}>STREAK</Text></View></View>
           {profileMember.shareProfileDetails && profileMember.bio ? <View style={s.profileSection}><Text style={[s.profileSectionTitle, isDark && d.text]}>About</Text><Text style={[s.profileBio, isDark && d.muted]}>{profileMember.bio}</Text></View> : null}
           {profileMember.interests?.length ? <View style={s.profileSection}><Text style={[s.profileSectionTitle, isDark && d.text]}>Interests</Text><View style={s.profileChips}>{profileMember.interests.map((interest) => <View key={interest} style={[s.profileChip, isDark && d.accent]}><Text style={[s.profileChipText, isDark && d.link]}>{interest}</Text></View>)}</View></View> : null}
           <View style={s.profileSection}><Text style={[s.profileSectionTitle, isDark && d.text]}>Connect</Text>
             {profileMember.shareProfileDetails && (profileMember.instagram || profileMember.linkedin || profileMember.gmail) ? <View style={s.contactLinks}>
-              {profileMember.instagram ? <Pressable style={[s.profileContact, isDark && d.memberStat]} onPress={() => openUrl(`https://instagram.com/${profileMember.instagram?.replace(/^@/, '')}`)}><Feather name="instagram" size={17} color="#C04F91" /><Text style={[s.profileContactText, isDark && d.text]}>{profileMember.instagram.startsWith('@') ? profileMember.instagram : `@${profileMember.instagram}`}</Text><Feather name="external-link" size={13} color="#8B94A7" /></Pressable> : null}
-              {profileMember.linkedin ? <Pressable style={[s.profileContact, isDark && d.memberStat]} onPress={() => openUrl(/^https?:\/\//i.test(profileMember.linkedin || '') ? profileMember.linkedin! : `https://${profileMember.linkedin}`)}><Feather name="linkedin" size={17} color="#3276B1" /><Text style={[s.profileContactText, isDark && d.text]}>LinkedIn</Text><Feather name="external-link" size={13} color="#8B94A7" /></Pressable> : null}
-              {profileMember.gmail ? <Pressable style={[s.profileContact, isDark && d.memberStat]} onPress={() => openUrl(`mailto:${profileMember.gmail}`)}><Feather name="mail" size={17} color="#D06055" /><Text style={[s.profileContactText, isDark && d.text]}>{profileMember.gmail}</Text><Feather name="external-link" size={13} color="#8B94A7" /></Pressable> : null}
+              {profileMember.instagram ? <MotionPressable style={[s.profileContact, isDark && d.memberStat]} onPress={() => openUrl(`https://instagram.com/${profileMember.instagram?.replace(/^@/, '')}`)}><Feather name="instagram" size={17} color="#C04F91" /><Text style={[s.profileContactText, isDark && d.text]}>{profileMember.instagram.startsWith('@') ? profileMember.instagram : `@${profileMember.instagram}`}</Text><Feather name="external-link" size={13} color="#8B94A7" /></MotionPressable> : null}
+              {profileMember.linkedin ? <MotionPressable style={[s.profileContact, isDark && d.memberStat]} onPress={() => openUrl(/^https?:\/\//i.test(profileMember.linkedin || '') ? profileMember.linkedin! : `https://${profileMember.linkedin}`)}><Feather name="linkedin" size={17} color="#3276B1" /><Text style={[s.profileContactText, isDark && d.text]}>LinkedIn</Text><Feather name="external-link" size={13} color="#8B94A7" /></MotionPressable> : null}
+              {profileMember.gmail ? <MotionPressable style={[s.profileContact, isDark && d.memberStat]} onPress={() => openUrl(`mailto:${profileMember.gmail}`)}><Feather name="mail" size={17} color="#D06055" /><Text style={[s.profileContactText, isDark && d.text]}>{profileMember.gmail}</Text><Feather name="external-link" size={13} color="#8B94A7" /></MotionPressable> : null}
             </View> : <View style={[s.privateDetails, isDark && d.memberStat]}><Feather name="lock" size={15} color={isDark ? '#8F9BB1' : '#8790A2'} /><Text style={[s.privateDetailsText, isDark && d.muted]}>This student hasn’t shared contact details.</Text></View>}
           </View>
           {profileMember.id !== pb.authStore.record?.id ? <View style={s.moderationActions}>
-            <Pressable style={[s.reportButton, isDark && d.memberStat]} onPress={() => openReport(profileMember)}><Feather name="flag" size={15} color={isDark ? '#C8CEFF' : '#4056C6'} /><Text style={[s.reportButtonText, isDark && d.link]}>Report</Text></Pressable>
-            <Pressable style={s.blockButton} onPress={() => blockMember(profileMember)}><Feather name="user-x" size={15} color="#C7445A" /><Text style={s.blockButtonText}>Block user</Text></Pressable>
+            <MotionPressable style={[s.reportButton, isDark && d.memberStat]} onPress={() => openReport(profileMember)}><Feather name="flag" size={15} color={isDark ? '#C8CEFF' : '#4056C6'} /><Text style={[s.reportButtonText, isDark && d.link]}>Report</Text></MotionPressable>
+            <MotionPressable style={s.blockButton} onPress={() => blockMember(profileMember)}><Feather name="user-x" size={15} color="#C7445A" /><Text style={s.blockButtonText}>Block user</Text></MotionPressable>
           </View> : null}
         </View> : null}
       </View>
     </Modal>
     <Modal visible={!!reportMember} transparent animationType="fade" onRequestClose={() => setReportMember(null)}>
       <View style={s.reportBackdrop}>
-        <Pressable style={StyleSheet.absoluteFill} onPress={() => setReportMember(null)} accessibilityLabel="Close report form" />
+        <MotionPressable style={StyleSheet.absoluteFill} onPress={() => setReportMember(null)} accessibilityLabel="Close report form" />
         <View style={[s.reportSheet, isDark && d.memberProfile]}>
-          <View style={s.profileSheetHeader}><View><Text style={[s.profileSheetLabel, isDark && d.link]}>REPORT USER</Text><Text style={[s.reportTitle, isDark && d.text]}>{reportMember?.name || reportMember?.username || 'School member'}</Text></View><Pressable style={[s.profileClose, isDark && d.accent]} onPress={() => setReportMember(null)}><Feather name="x" size={19} color={isDark ? '#E8ECF7' : '#536078'} /></Pressable></View>
+          <View style={s.profileSheetHeader}><View><Text style={[s.profileSheetLabel, isDark && d.link]}>REPORT USER</Text><Text style={[s.reportTitle, isDark && d.text]}>{reportMember?.name || reportMember?.username || 'School member'}</Text></View><MotionPressable style={[s.profileClose, isDark && d.accent]} onPress={() => setReportMember(null)}><Feather name="x" size={19} color={isDark ? '#E8ECF7' : '#536078'} /></MotionPressable></View>
           <Text style={[s.reportHint, isDark && d.muted]}>Choose the reason that best describes the problem.</Text>
-          <View style={s.reasonList}>{reportReasons.map((reason) => <Pressable key={reason.value} style={[s.reasonButton, isDark && d.memberStat, reportReason === reason.value && s.reasonButtonActive]} onPress={() => setReportReason(reason.value)}><Feather name={reportReason === reason.value ? 'check-circle' : 'circle'} size={16} color={reportReason === reason.value ? '#4056C6' : '#8B94A7'} /><Text style={[s.reasonText, isDark && d.text]}>{reason.label}</Text></Pressable>)}</View>
+          <View style={s.reasonList}>{reportReasons.map((reason) => <MotionPressable key={reason.value} style={[s.reasonButton, isDark && d.memberStat, reportReason === reason.value && s.reasonButtonActive]} onPress={() => setReportReason(reason.value)}><Feather name={reportReason === reason.value ? 'check-circle' : 'circle'} size={16} color={reportReason === reason.value ? '#4056C6' : '#8B94A7'} /><Text style={[s.reasonText, isDark && d.text]}>{reason.label}</Text></MotionPressable>)}</View>
           <TextInput style={[s.reportInput, isDark && d.memberStat, isDark && d.text]} value={reportDetails} onChangeText={setReportDetails} placeholder="Add details (optional)" placeholderTextColor={isDark ? '#71809C' : '#929BAD'} maxLength={1000} multiline />
           {reportError ? <Text style={s.communityError}>{reportError}</Text> : null}
-          <Pressable disabled={submittingReport} style={[s.submitReportButton, submittingReport && s.sendDisabled]} onPress={submitReport}>{submittingReport ? <ActivityIndicator color="#FFF" /> : <Text style={s.submitReportText}>Submit report</Text>}</Pressable>
+          <MotionPressable disabled={submittingReport} style={[s.submitReportButton, submittingReport && s.sendDisabled]} onPress={submitReport}>{submittingReport ? <ActivityIndicator color="#FFF" /> : <Text style={s.submitReportText}>Submit report</Text>}</MotionPressable>
         </View>
       </View>
     </Modal>

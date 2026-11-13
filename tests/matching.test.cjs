@@ -2,10 +2,10 @@ const test=require('node:test');const assert=require('node:assert/strict');
 const {rankMajors,questions,dimensions}=require('../src/lib/matching.ts');
 const {majors}=require('../src/data/majors.ts');
 const {answersFor,representative,reachability}=require('../scripts/evaluate.cjs');
-test('56 complete profiles, bounded compatibility, independent of catalog order',()=>{
- assert.equal(majors.length,56);
+test('96 complete profiles, bounded compatibility, independent of catalog order',()=>{
+ assert.equal(majors.length,96);
  for(const a of Object.values(representative)) {
-  const results=rankMajors(a);assert.equal(results.length,56);
+  const results=rankMajors(a);assert.equal(results.length,96);
   assert.deepEqual(results,rankMajors(a,[...majors].reverse()));
   for(const r of results){assert.ok(r.score===null||(r.score>=0&&r.score<=100));assert.ok(r.confidence>=0&&r.confidence<=100);}
  }
