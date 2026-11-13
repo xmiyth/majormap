@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Animated, Easing, Modal, Platform, SafeAreaView, StyleSheet } from 'react-native';
+import { ActivityIndicator, Pressable, View, Modal, Platform, SafeAreaView, StatusBar as NativeStatusBar, StyleSheet } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as WebBrowser from 'expo-web-browser';
 import { StatusBar } from 'expo-status-bar';
@@ -7,6 +7,10 @@ import { useFonts } from 'expo-font';
 import { IBMPlexSans_500Medium } from '@expo-google-fonts/ibm-plex-sans/500Medium';
 import { IBMPlexSans_600SemiBold } from '@expo-google-fonts/ibm-plex-sans/600SemiBold';
 import { IBMPlexSans_700Bold } from '@expo-google-fonts/ibm-plex-sans/700Bold';
+import { AppHeader } from './components/AppHeader';
+import { SavedScreen } from './screens/SavedScreen';
+import { TabScene } from './components/TabScene';
+import { useReducedMotion } from './lib/useReducedMotion';
 import { BottomTabBar, TabKey } from './components/BottomTabBar';
 import { enableCustomTypography, Text } from './components/Typography';
 import { LoginScreen } from './screens/LoginScreen';
@@ -20,12 +24,23 @@ import { SettingsScreen } from './screens/SettingsScreen';
 import { ThemeMode, ThemeProvider } from './lib/theme';
 import { completeDailySat as calculateDailySatProgress, DailySatProgress, emptyDailySatProgress } from './lib/dailySat';
 import { Major } from './types';
+import { majors } from './data/majors';
+import { useMajorMap } from './lib/useMajorMap';
+import { MajorDetail } from './components/MajorDetail';
+import { useChallengeAttempts, ChallengeAttempt } from './lib/useChallengeAttempts';
+import { challengeForMajor, MajorChallenge, majorChallenges } from './data/majorChallenges';
+import { MajorExperience } from './components/MajorExperience';
+import { csExperience } from './data/csExperience';
+import { BlockedUser, ModerationUser, ReportReason } from './types';
 import { pb, pocketbaseAuthReady, pocketBaseErrorMessage, PocketBasePublicProfileRecord, PocketBaseUserRecord, pocketbaseUrl } from './lib/pocketbase';
+import { RecordModel } from 'pocketbase';
 
-type Student = Omit<SignUpDetails, 'password'> & { bio?: string; instagram?: string; linkedin?: string; gmail?: string; shareProfileDetails?: boolean; interests?: string[]; schoolMemberships?: string[]; dailySatStreak?: number; dailySatBest?: number; dailySatLastCompleted?: string; dailySatFreezeWeek?: string };
-const tabOrder: TabKey[] = ['Home', 'Explore', 'Discover', 'Schools', 'Profile'];
+type Student = Omit<SignUpDetails, 'password'> & { id?: string; bio?: string; instagram?: string; linkedin?: string; gmail?: string; shareProfileDetails?: boolean; interests?: string[]; schoolMemberships?: string[]; dailySatStreak?: number; dailySatBest?: number; dailySatLastCompleted?: string; dailySatFreezeWeek?: string };
+type UserBlockRecord = RecordModel & { blocked: string; blockedName?: string; blockedUsername?: string };
+const tabOrder: TabKey[] = ['Home', 'Explore', 'Schools', 'Discover', 'Profile'];
 
 const recordToStudent = (record: PocketBaseUserRecord): Student => ({
+  id: record.id,
   name: record.name ?? '',
   username: record.username ?? '',
   email: record.email ?? '',
@@ -73,25 +88,36 @@ const studentRecordData = (student: Student) => ({
 export default function App() {
   const [fontsLoaded, fontError] = useFonts({ IBMPlexSans_500Medium, IBMPlexSans_600SemiBold, IBMPlexSans_700Bold });
   const [activeScreen, setActiveScreen] = useState<TabKey>('Home');
-  const [savedIds, setSavedIds] = useState<string[]>([]);
+  const [exploreCategory, setExploreCategory] = useState('All');
+  const [exploreRequest, setExploreRequest] = useState(0);
+  const [searchRequest, setSearchRequest] = useState(0);
+  const [showSaved, setShowSaved] = useState(false);
+  const [selectedMajor,setSelectedMajor]=useState<Major|null>(null);
   const [interests, setInterests] = useState<string[]>([]);
   const [student, setStudent] = useState<Student | null>(null);
+  const map=useMajorMap(student?.id);
+  const challenges=useChallengeAttempts(student?.id);
+  const [activeChallenge,setActiveChallenge]=useState<MajorChallenge|null>(null);
+  const [viewPreviousChallenge, setViewPreviousChallenge] = useState(false);
+  const savedIds=map.savedIds;
+  const openMajor=(major:Major)=>{setSelectedMajor(major);};
+  const tryMajor=(major:Major)=>{const challenge=challengeForMajor(major.id);if(challenge){setViewPreviousChallenge(false);setSelectedMajor(null);setActiveChallenge(challenge);}};
+  const openAttempt=(attempt:ChallengeAttempt)=>{const challenge=[...majorChallenges,csExperience].find(item=>item.id===attempt.challengeId);if(challenge){setViewPreviousChallenge(true);setActiveChallenge(challenge);}};
+  const closeChallenge=()=>{const major=majors.find(item=>item.id===activeChallenge?.majorId);setActiveChallenge(null);if(major)setSelectedMajor(major);};
   const [accounts, setAccounts] = useState<Student[]>([]);
+  const [blockedUsers, setBlockedUsers] = useState<BlockedUser[]>([]);
   const [loginMode, setLoginMode] = useState(false);
   const [showSignUp, setShowSignUp] = useState(false);
   const [authInitializing, setAuthInitializing] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
+  const [dismissedBackendMessage, setDismissedBackendMessage] = useState('');
   const [themeMode, setThemeModeState] = useState<ThemeMode>('light');
   const [signupTarget, setSignupTarget] = useState<TabKey>('Profile');
   const [pendingGoogleProfile, setPendingGoogleProfile] = useState<GoogleSignUpProfile | null>(null);
   const swipe = useRef<{ x: number; y: number } | null>(null);
-  const screenOpacity = useRef(new Animated.Value(1)).current;
-
+  const reducedMotion = useReducedMotion();
   const navigateTo = (nextScreen: TabKey) => {
-    if (nextScreen === activeScreen) return;
-    screenOpacity.stopAnimation();
-    screenOpacity.setValue(.92);
-    setActiveScreen(nextScreen);
+    if (nextScreen !== activeScreen) setActiveScreen(nextScreen);
   };
 
   const refreshAccounts = async () => {
@@ -101,6 +127,20 @@ export default function App() {
     }
     const records = await pb.collection('public_profiles').getFullList<PocketBasePublicProfileRecord>({ sort: 'username' });
     setAccounts(records.map(recordToStudent));
+  };
+
+  const refreshBlocks = async () => {
+    if (!pb.authStore.isValid) {
+      setBlockedUsers([]);
+      return;
+    }
+    try {
+      const records = await pb.collection('user_blocks').getFullList<UserBlockRecord>({ sort: '-created' });
+      setBlockedUsers(records.map((record) => ({ blockId: record.id, id: record.blocked, name: record.blockedName, username: record.blockedUsername })));
+    } catch {
+      // Moderation data is optional during staged backend rollouts and must never invalidate a valid login.
+      setBlockedUsers([]);
+    }
   };
 
   useEffect(() => {
@@ -116,7 +156,7 @@ export default function App() {
         const account = recordToStudent(auth.record as PocketBaseUserRecord);
         setStudent(account);
         setInterests(account.interests ?? []);
-        await refreshAccounts();
+        await Promise.allSettled([refreshAccounts(), refreshBlocks()]);
       } catch {
         pb.authStore.clear();
       } finally {
@@ -125,12 +165,6 @@ export default function App() {
     });
     return () => { active = false; };
   }, []);
-
-  useEffect(() => {
-    Animated.parallel([
-      Animated.timing(screenOpacity, { toValue: 1, duration: 140, easing: Easing.out(Easing.quad), useNativeDriver: true }),
-    ]).start();
-  }, [activeScreen, screenOpacity]);
 
   useEffect(() => {
     AsyncStorage.getItem('majormap.theme').then((saved) => {
@@ -156,7 +190,10 @@ export default function App() {
     }).catch(() => undefined);
   };
 
-  const toggleSaved = (major: Major) => setSavedIds((current) => current.includes(major.id) ? current.filter((id) => id !== major.id) : [...current, major.id]);
+  const [persistenceError,setPersistenceError]=useState('');
+  const backendMessage = map.error || challenges.error || persistenceError;
+  const toggleSaved = async (major: Major) => { try { await map.toggleSave(major.id); setPersistenceError(''); } catch(e) { setPersistenceError(e instanceof Error?e.message:'Could not save major. Please retry.'); } };
+  useEffect(()=>{setSelectedMajor(null);setPersistenceError('');},[student?.id]);
   const openSignUp = (target: TabKey) => { setSignupTarget(target); setLoginMode(false); setShowSignUp(true); };
 
   const finishSignUp = async (details: SignUpDetails) => {
@@ -179,7 +216,7 @@ export default function App() {
     const auth = await pb.collection('users').authWithPassword(details.email, details.password);
     const account = recordToStudent(auth.record as PocketBaseUserRecord);
     cacheAccount(account);
-    await refreshAccounts();
+    await Promise.allSettled([refreshAccounts(), refreshBlocks()]);
     setStudent(account);
     setInterests([]);
     setShowSignUp(false);
@@ -189,7 +226,7 @@ export default function App() {
   const finishOAuthLogin = async (record: PocketBaseUserRecord) => {
     const account = recordToStudent(record);
     cacheAccount(account);
-    await refreshAccounts();
+    await Promise.allSettled([refreshAccounts(), refreshBlocks()]);
     setStudent(account);
     setInterests(account.interests ?? []);
     setShowSignUp(false);
@@ -273,7 +310,7 @@ export default function App() {
       const auth = await pb.collection('users').authWithPassword(identifier, password);
       const account = recordToStudent(auth.record as PocketBaseUserRecord);
       cacheAccount(account);
-      await refreshAccounts();
+      await Promise.allSettled([refreshAccounts(), refreshBlocks()]);
       setStudent(account);
       setInterests(account.interests ?? []);
       setShowSignUp(false);
@@ -290,6 +327,7 @@ export default function App() {
     pb.authStore.clear();
     setStudent(null);
     setAccounts([]);
+    setBlockedUsers([]);
     setInterests([]);
     setLoginMode(true);
     setShowSignUp(true);
@@ -337,6 +375,56 @@ export default function App() {
     }
   };
 
+  const blockUser = async (target: ModerationUser) => {
+    const blocker = pb.authStore.record?.id;
+    if (!blocker) return 'You are not signed in.';
+    if (!target.id || target.id === blocker) return 'You cannot block this account.';
+    try {
+      await pb.collection('user_blocks').create({
+        blocker,
+        blocked: target.id,
+        blockedName: target.name ?? '',
+        blockedUsername: target.username ?? '',
+      });
+      await refreshBlocks();
+      return null;
+    } catch (error) {
+      return pocketBaseErrorMessage(error, 'Could not block this user.');
+    }
+  };
+
+  const unblockUser = async (blockedUserId: string) => {
+    const block = blockedUsers.find((item) => item.id === blockedUserId);
+    if (!block) return null;
+    try {
+      await pb.collection('user_blocks').delete(block.blockId);
+      setBlockedUsers((current) => current.filter((item) => item.blockId !== block.blockId));
+      return null;
+    } catch (error) {
+      return pocketBaseErrorMessage(error, 'Could not unblock this user.');
+    }
+  };
+
+  const reportUser = async (target: ModerationUser, reason: ReportReason, details: string, context: string) => {
+    const reporter = pb.authStore.record?.id;
+    if (!reporter) return 'You are not signed in.';
+    if (!target.id || target.id === reporter) return 'You cannot report this account.';
+    try {
+      await pb.collection('user_reports').create({
+        reporter,
+        reported: target.id,
+        reason,
+        details: details.trim(),
+        context,
+        reportedName: target.name ?? '',
+        reportedUsername: target.username ?? '',
+      });
+      return null;
+    } catch (error) {
+      return pocketBaseErrorMessage(error, 'Could not submit this report.');
+    }
+  };
+
   const dailySatProgress: DailySatProgress = student ? {
     streak: student.dailySatStreak ?? 0,
     best: student.dailySatBest ?? 0,
@@ -381,28 +469,39 @@ export default function App() {
 
   return <ThemeProvider value={{ mode: themeMode, isDark: themeMode === 'dark', setMode: setThemeMode }}><SafeAreaView style={[styles.app, themeMode === 'dark' && styles.appDark]}>
     <StatusBar style={themeMode === 'dark' ? 'light' : 'dark'} backgroundColor={themeMode === 'dark' ? '#080D18' : '#F6F7FB'} translucent={false} />
-    <Animated.View style={[styles.screen, { opacity: screenOpacity }]} onTouchStart={(event) => { swipe.current = { x: event.nativeEvent.pageX, y: event.nativeEvent.pageY }; }} onTouchEnd={(event) => endSwipe(event.nativeEvent.pageX, event.nativeEvent.pageY)}>
-      {activeScreen === 'Home' && <HomeScreen onExplore={() => navigateTo('Explore')} onDiscover={() => navigateTo('Discover')} isSignedIn={!!student} userKey={pb.authStore.record?.id ?? 'guest'} dailySatProgress={dailySatProgress} onCompleteDailySat={completeDailySatQuestion} onSignUp={() => openSignUp('Home')} />}
-      {activeScreen === 'Explore' && <ExploreScreen savedIds={savedIds} onToggleSave={toggleSaved} isSignedIn={!!student} communityMembers={accounts} />}
-      {activeScreen === 'Discover' && <DiscoverScreen onExplore={() => navigateTo('Explore')} isSignedIn={!!student} onSignUp={() => openSignUp('Discover')} />}
-      {activeScreen === 'Schools' && <SchoolsScreen joinedSchoolIds={student?.schoolMemberships ?? []} onToggleJoin={(schoolId) => {
+    <AppHeader active={activeScreen} savedCount={savedIds.length} signedIn={!!student} onHome={() => navigateTo('Home')} onSearch={() => { setExploreCategory('All'); setExploreRequest(value => value + 1); setSearchRequest(value => value + 1); navigateTo('Explore'); }} onSaved={() => setShowSaved(true)} onSettings={() => setShowSettings(true)} />
+    <View style={styles.screen} onTouchStart={(event) => { swipe.current = { x: event.nativeEvent.pageX, y: event.nativeEvent.pageY }; }} onTouchEnd={(event) => endSwipe(event.nativeEvent.pageX, event.nativeEvent.pageY)}>
+      <TabScene active={activeScreen === 'Home'} retain reducedMotion={reducedMotion}><HomeScreen active={map.active} reviewed={map.reviewed} savedCount={savedIds.length} onOpenMajor={openMajor} onTryMajor={tryMajor} onExplore={() => { setExploreCategory('All'); setExploreRequest(value => value + 1); navigateTo('Explore'); }} onExploreInterest={category => { setExploreCategory(category); setExploreRequest(value => value + 1); navigateTo('Explore'); }} onDiscover={() => navigateTo('Discover')} isSignedIn={!!student} userKey={pb.authStore.record?.id ?? 'guest'} dailySatProgress={dailySatProgress} onCompleteDailySat={completeDailySatQuestion} onSignUp={() => openSignUp('Home')} /></TabScene>
+      <TabScene key={`explore:${student?.id ?? 'guest'}`} active={activeScreen === 'Explore'} retain reducedMotion={reducedMotion}><ExploreScreen searchRequest={searchRequest} resetRequest={exploreRequest} initialCategory={exploreCategory} matches={map.active?.results??[]} onOpenMajor={openMajor} savedIds={savedIds} onToggleSave={toggleSaved} isSignedIn={!!student} communityMembers={accounts.filter((account) => !account.id || !blockedUsers.some((blocked) => blocked.id === account.id))} /></TabScene>
+      <TabScene active={activeScreen === 'Discover'} retain reducedMotion={reducedMotion}><DiscoverScreen owner={student?.id} active={map.active} history={map.history} onSave={map.saveAssessment} onActivate={map.activate} onOpenMajor={openMajor} onTryMajor={tryMajor} onExplore={() => navigateTo('Explore')} isSignedIn={!!student} onSignUp={() => openSignUp('Discover')} /></TabScene>
+      <TabScene active={activeScreen === 'Schools'} reducedMotion={reducedMotion}><SchoolsScreen joinedSchoolIds={student?.schoolMemberships ?? []} blockedUserIds={blockedUsers.map((item) => item.id)} onBlockUser={blockUser} onReportUser={reportUser} onToggleJoin={(schoolId) => {
         if (!student) {
           openSignUp('Schools');
           return;
         }
         const currentSchoolId = student.schoolMemberships?.[0];
         updateStudent({ ...student, schoolMemberships: currentSchoolId === schoolId ? [] : [schoolId] });
-      }} />}
-      {activeScreen === 'Profile' && <ProfileScreen onUpdateStudent={updateStudent} savedCount={savedIds.length} savedIds={savedIds} onToggleSave={toggleSaved} student={student} interests={interests} onUpdateInterests={(next) => { setInterests(next); if (student) updateStudent({ ...student, interests: next }); }} onSignUp={() => openSignUp('Profile')} onSignOut={signOut} onExplore={() => navigateTo('Explore')} onOpenSettings={() => setShowSettings(true)} />}
-    </Animated.View>
+      }} /></TabScene>
+      <TabScene active={activeScreen === 'Profile'} reducedMotion={reducedMotion}><ProfileScreen onOpenMajor={openMajor} challengeAttempts={challenges.attempts} onOpenAttempt={openAttempt} onUpdateStudent={updateStudent} savedCount={savedIds.length} savedIds={savedIds} onToggleSave={toggleSaved} student={student} interests={interests} onUpdateInterests={(next) => { setInterests(next); if (student) updateStudent({ ...student, interests: next }); }} onSignUp={() => openSignUp('Profile')} onSignOut={signOut} onExplore={() => navigateTo('Explore')} onOpenSettings={() => setShowSettings(true)} /></TabScene>
+    </View>
+    {(map.loading||challenges.loading)&&<View style={styles.backendNotice}><Text style={styles.backendLoading}>Loading your MajorMap…</Text></View>}
+    {!!backendMessage&&backendMessage!==dismissedBackendMessage&&<View style={[styles.backendNotice,themeMode==='dark'&&styles.backendNoticeDark]}><Text accessibilityRole="alert" style={[styles.backendError,themeMode==='dark'&&styles.backendErrorDark]}>{backendMessage}</Text><View style={styles.backendActions}><Pressable onPress={()=>{setDismissedBackendMessage('');setPersistenceError('');map.reload();challenges.reload();}}><Text style={styles.backendAction}>Retry</Text></Pressable><Pressable onPress={()=>{setDismissedBackendMessage(backendMessage);setPersistenceError('');}}><Text style={styles.backendAction}>Dismiss</Text></Pressable></View></View>}
+    <MajorDetail hasAssessment={!!map.active} reviewed={map.reviewed} selected={selectedMajor} setSelected={openMajor} onClose={()=>setSelectedMajor(null)} savedIds={savedIds} onToggleSave={toggleSaved} isSignedIn={!!student} communityMembers={accounts.filter(a=>!blockedUsers.some(b=>b.id===a.id))} attempts={challenges.attempts} matchScore={map.active?.results.find(result=>result.majorId===selectedMajor?.id)?.score} onTryMajor={tryMajor} onReviewed={async()=>{if(selectedMajor)try{await map.markReviewed(selectedMajor.id);setPersistenceError('');}catch(e){setPersistenceError(e instanceof Error?e.message:'Could not save checklist.');}}} error={persistenceError}/>
+    <MajorExperience challenge={activeChallenge} owner={student?.id} viewPrevious={viewPreviousChallenge} attempts={challenges.attempts} onClose={closeChallenge} onSignIn={()=>openSignUp(activeScreen)} onComplete={challenges.complete} onTryAnother={()=>{setActiveChallenge(null);navigateTo('Explore');}} />
     <BottomTabBar active={activeScreen} onSelect={navigateTo} />
-    <Modal visible={showSignUp} animationType="slide" onRequestClose={() => setShowSignUp(false)}>
-      <SafeAreaView style={styles.signup}>
-        {loginMode ? <LoginScreen onLogin={login} onGoogleLogin={loginWithGoogle} onSignUp={() => setLoginMode(false)} /> : <SignUpScreen onComplete={finishSignUp} onCompleteGoogle={finishGoogleSignUp} initialGoogleProfile={pendingGoogleProfile} onLogin={() => setLoginMode(true)} />}
+    <Modal visible={showSaved} animationType={reducedMotion ? "none" : "slide"} onRequestClose={() => setShowSaved(false)}>
+      <SafeAreaView style={[styles.app, themeMode === 'dark' && styles.appDark]}>
+        <View style={styles.savedHeader}><Text accessibilityRole="header" style={[styles.savedTitle, themeMode === 'dark' && styles.loadingTextDark]}>Saved majors</Text><Pressable accessibilityRole="button" accessibilityLabel="Close saved majors" style={styles.savedClose} onPress={() => setShowSaved(false)}><Text style={styles.backendAction}>Done</Text></Pressable></View>
+        <SavedScreen savedIds={savedIds} onOpenMajor={major => { setShowSaved(false); openMajor(major); }} onToggleSave={toggleSaved} onExplore={() => { setShowSaved(false); navigateTo('Explore'); }} />
       </SafeAreaView>
     </Modal>
-    <Modal visible={showSettings && !!student} animationType="slide" onRequestClose={() => setShowSettings(false)}>
-      {student ? <SettingsScreen student={student} onClose={() => setShowSettings(false)} onSignOut={signOut} onChangePassword={changePassword} onDeleteAccount={deleteAccount} onUpdateAcademics={updateAcademics} onLeaveSchool={(schoolId) => {
+    <Modal visible={showSignUp} animationType={reducedMotion ? "none" : "slide"} onRequestClose={() => setShowSignUp(false)}>
+      <SafeAreaView style={styles.signup}>
+        {loginMode ? <LoginScreen onLogin={login} onGoogleLogin={loginWithGoogle} onSignUp={() => setLoginMode(false)} /> : <SignUpScreen onComplete={finishSignUp} onCompleteGoogle={finishGoogleSignUp} initialGoogleProfile={pendingGoogleProfile} onLogin={() => setLoginMode(true)} onBack={() => setShowSignUp(false)} />}
+      </SafeAreaView>
+    </Modal>
+    <Modal visible={showSettings && !!student} animationType={reducedMotion ? "none" : "slide"} onRequestClose={() => setShowSettings(false)}>
+      {student ? <SettingsScreen student={student} blockedUsers={blockedUsers} onUnblockUser={unblockUser} onClose={() => setShowSettings(false)} onSignOut={signOut} onChangePassword={changePassword} onDeleteAccount={deleteAccount} onUpdateAcademics={updateAcademics} onLeaveSchool={(schoolId) => {
         const current = student.schoolMemberships ?? [];
         updateStudent({ ...student, schoolMemberships: current.filter((id) => id !== schoolId) });
       }} /> : null}
@@ -411,7 +510,10 @@ export default function App() {
 }
 
 const styles = StyleSheet.create({
-  app: { flex: 1, backgroundColor: '#F6F7FB' },
+  savedHeader: { minHeight: 60, paddingLeft: 20, paddingRight: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  savedTitle: { fontSize: 22, fontWeight: '600', color: '#182343' },
+  savedClose: { minHeight: 48, minWidth: 60, alignItems: 'center', justifyContent: 'center' },
+  app: { flex: 1, backgroundColor: '#F6F7FB', paddingTop: Platform.OS === 'android' ? NativeStatusBar.currentHeight ?? 24 : 0 },
   signup: { flex: 1, backgroundColor: '#4056C6' },
   screen: { flex: 1 },
   loading: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#F6F7FB', gap: 12 },
@@ -419,4 +521,11 @@ const styles = StyleSheet.create({
   appDark: { backgroundColor: '#080D18' },
   loadingDark: { backgroundColor: '#080D18' },
   loadingTextDark: { color: '#B2BAD0' },
+  backendNotice: { paddingHorizontal: 16, paddingVertical: 10, backgroundColor: '#FFF', borderTopWidth: 1, borderTopColor: '#E4E7EF' },
+  backendNoticeDark: { backgroundColor: '#131B2D', borderTopColor: '#2A3852' },
+  backendLoading: { color: '#667188', fontSize: 13 },
+  backendError: { color: '#B42318', fontSize: 13, lineHeight: 19 },
+  backendErrorDark: { color: '#FFB4B4' },
+  backendActions: { flexDirection: 'row', gap: 20, marginTop: 7 },
+  backendAction: { color: '#6574E8', fontSize: 13, fontWeight: '700' },
 });

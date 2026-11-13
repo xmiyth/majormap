@@ -1,3 +1,5 @@
+import { useReducedMotion } from '../lib/useReducedMotion';
+import { MotionPressable as Pressable } from '../components/MotionPressable';
 import React, { useEffect, useRef, useState } from 'react';
 import {
   Animated,
@@ -5,7 +7,6 @@ import {
   Easing,
   KeyboardAvoidingView,
   Platform,
-  Pressable,
   ScrollView,
   StyleSheet,
   View,
@@ -37,6 +38,7 @@ type Props = {
   onCompleteGoogle: (details: SignUpDetails) => Promise<void>;
   initialGoogleProfile?: GoogleSignUpProfile | null;
   onLogin: () => void;
+  onBack: () => void;
 };
 const grades = ['9', '10', '11', '12'];
 type SchoolResult = { id: string; name: string; city: string; state: string; kind: string; source: string; aliases?: string[] };
@@ -69,7 +71,7 @@ async function loadAlmatyPrivateSchools(signal: AbortSignal) {
   return almatyPrivateSchoolCache;
 }
 
-export function SignUpScreen({ onComplete, onCompleteGoogle, initialGoogleProfile, onLogin }: Props) {
+export function SignUpScreen({ onComplete, onCompleteGoogle, initialGoogleProfile, onLogin, onBack }: Props) {
   const [legalDocument, setLegalDocument] = useState<LegalDocumentType | null>(null);
   const [step, setStep] = useState<1 | 2>(1);
   const [name, setName] = useState('');
@@ -91,11 +93,16 @@ export function SignUpScreen({ onComplete, onCompleteGoogle, initialGoogleProfil
   const [submitting, setSubmitting] = useState(false);
   const [googleMode, setGoogleMode] = useState(!!initialGoogleProfile);
   const [submitError, setSubmitError] = useState('');
-  const entrance = useRef(new Animated.Value(0)).current;
+  const entrance = useRef(new Animated.Value(1)).current;
+  const reducedMotion = useReducedMotion();
 
   useEffect(() => {
-    Animated.timing(entrance, { toValue: 1, duration: 480, easing: Easing.out(Easing.cubic), useNativeDriver: true }).start();
-  }, [entrance]);
+    if (reducedMotion) { entrance.setValue(1); return; }
+    entrance.setValue(0);
+    const animation = Animated.timing(entrance, { toValue: 1, duration: 240, easing: Easing.out(Easing.cubic), useNativeDriver: Platform.OS !== 'web', isInteraction: false });
+    animation.start();
+    return () => animation.stop();
+  }, [entrance, reducedMotion, step]);
 
   useEffect(() => {
     if (!initialGoogleProfile) return;
@@ -226,6 +233,19 @@ export function SignUpScreen({ onComplete, onCompleteGoogle, initialGoogleProfil
   return <><KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
     <StatusBar style="light" backgroundColor="#4056C6" translucent={false} />
     <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={step === 2 && !googleMode ? 'Back to account details' : 'Back to MajorMap'}
+        disabled={submitting}
+        onPress={() => {
+          if (step === 2 && !googleMode) { setTouched(false); setSubmitError(''); setStep(1); }
+          else onBack();
+        }}
+        style={({ pressed }) => [styles.pageBackButton, { opacity: submitting ? 0.5 : pressed ? 0.7 : 1 }]}
+      >
+        <Feather name="arrow-left" size={20} color="#FFF" />
+        <Text style={styles.pageBackText}>Go back</Text>
+      </Pressable>
       <View style={styles.top}>
         <View style={styles.logo}><Text style={styles.logoText}>M</Text></View>
         <Text style={styles.brand}>MajorMap</Text>
@@ -301,6 +321,8 @@ export function SignUpScreen({ onComplete, onCompleteGoogle, initialGoogleProfil
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#4056C6' },
+  pageBackButton: { alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 44, paddingHorizontal: 8, marginBottom: 12 },
+  pageBackText: { color: '#FFF', fontSize: 14, fontWeight: '700' },
   scrollContent: { flexGrow: 1, padding: 20, paddingTop: 24, paddingBottom: 26 },
   top: { flexDirection: 'row', alignItems: 'center' },
   logo: { width: 35, height: 35, borderRadius: 11, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFF', marginRight: 9 },

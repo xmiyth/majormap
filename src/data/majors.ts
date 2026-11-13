@@ -1,4 +1,7 @@
 import { Major } from '../types';
+import { additionalMajors } from './additionalMajors';
+import { specialistMajors } from './specialistMajors';
+import { majorConnections, extraCareers, majorAliases } from './majorConnections';
 
 export const majors: Major[] = [
   {
@@ -363,4 +366,13 @@ const specializationMap: Record<string, string[]> = {
   music: ['Performance', 'Composition', 'Music Production', 'Music Education', 'Music Business'],
 };
 
-majors.forEach((major) => { major.specializations = specializationMap[major.id]; });
+majors.push(...additionalMajors, ...specialistMajors);
+majors.forEach((major) => {
+  const connected = (majorConnections[major.id] ?? []).map(id => majors.find(item => item.id === id)!.title);
+  major.specializations = [...new Set([...connected, ...(major.specializations ?? []), ...(specializationMap[major.id] ?? [])])];
+  major.careers = [...new Set([...major.careers, ...(extraCareers[major.id] ?? [])])];
+  major.searchTerms = [...(major.searchTerms ?? []), ...(majorAliases[major.id] ?? [])];
+  // Normalize legacy references so every related-major card opens a real page.
+  const legacy: Record<string, string> = { 'computer-science': 'cs', health: 'public-health' };
+  major.related = [...new Set(major.related.map(id => legacy[id] ?? id))].filter(id => id !== major.id && majors.some(item => item.id === id));
+});

@@ -1,0 +1,52 @@
+// IDs make navigation independent of display names.
+export const majorConnections: Record<string, string[]> = {
+  business: ['finance', 'marketing', 'accounting', 'fashion-management', 'luxury-management', 'business-analytics', 'retail-management', 'risk-management'],
+  marketing: ['fashion-communication', 'fashion-management', 'luxury-management', 'business-analytics'],
+  economics: ['quantitative-economics', 'econometrics'],
+  'fashion-design': ['textile-design', 'accessory-design', 'footwear-design', 'jewelry-design'],
+  'fashion-management': ['luxury-management', 'retail-management', 'fashion-communication', 'textile-development'],
+  'luxury-management': ['fashion-management', 'retail-management', 'jewelry-design'],
+  'accessory-design': ['footwear-design', 'jewelry-design'],
+  'quantitative-finance': ['financial-engineering', 'econometrics', 'fintech'],
+  'data-science': ['business-analytics', 'econometrics', 'operations-research'],
+  engineering: ['mechanical-engineering', 'electrical-engineering', 'civil-engineering', 'chemical-engineering', 'aerospace-engineering', 'computer-engineering', 'environmental-engineering', 'industrial-engineering', 'materials-engineering', 'mechatronics', 'petroleum-engineering', 'nuclear-engineering', 'marine-engineering', 'agricultural-engineering', 'systems-engineering', 'biomedical-engineering'],
+  'mechanical-engineering': ['automotive-engineering', 'aerospace-engineering', 'manufacturing-engineering', 'mechatronics', 'robotics', 'marine-engineering'],
+  'civil-engineering': ['structural-engineering', 'environmental-engineering', 'geological-engineering'],
+  'electrical-engineering': ['computer-engineering', 'mechatronics', 'robotics'],
+  cs: ['software-engineering', 'artificial-intelligence', 'cybersecurity', 'data-science', 'game-design', 'computer-engineering'],
+  mathematics: ['statistics', 'actuarial-science', 'data-science', 'applied-mathematics', 'operations-research', 'quantitative-finance'],
+  chemistry: ['chemical-engineering', 'materials-engineering', 'biochemistry', 'food-science'],
+  'environmental-science': ['environmental-engineering', 'geology', 'agricultural-engineering'],
+  finance: ['actuarial-science', 'accounting', 'economics', 'quantitative-finance', 'financial-engineering', 'fintech', 'risk-management'],
+  biology: ['biochemistry', 'neuroscience', 'biomedical-engineering', 'food-science'],
+  physics: ['nuclear-engineering', 'aerospace-engineering', 'materials-engineering', 'astronomy'],
+};
+
+export const extraCareers: Record<string, string[]> = {
+  engineering: ['Aerospace Engineer', 'Chemical Engineer', 'Environmental Engineer', 'Industrial Engineer', 'Computer Hardware Engineer'],
+  'mechanical-engineering': ['Thermal Engineer', 'Mechanical Design Engineer', 'Test Engineer', 'Manufacturing Engineer'],
+  'civil-engineering': ['Transportation Engineer', 'Water Resources Engineer', 'Geotechnical Engineer', 'Construction Engineer'],
+  'electrical-engineering': ['Power Systems Engineer', 'Electronics Engineer', 'Controls Engineer', 'RF Engineer'],
+  'biomedical-engineering': ['Medical Device Engineer', 'Clinical Engineer', 'Biomechanics Engineer', 'Validation Engineer'],
+  cs: ['Backend Developer', 'Mobile App Developer', 'Systems Programmer', 'Site Reliability Engineer'],
+  'data-science': ['Machine Learning Engineer', 'Analytics Engineer', 'Data Visualization Specialist'],
+  business: ['Business Analyst', 'Operations Coordinator', 'Account Manager', 'Product Operations Analyst'],
+  biology: ['Biological Technician', 'Laboratory Analyst', 'Research Assistant'],
+  chemistry: ['Analytical Chemist', 'Quality Control Chemist', 'Formulation Scientist'],
+  'graphic-design': ['Brand Designer', 'Packaging Designer', 'Editorial Designer'],
+  psychology: ['Research Assistant', 'Behavioral Research Coordinator', 'User Researcher'],
+};
+
+export const majorAliases: Record<string, string[]> = {
+  cs: ['CS', 'computer science', 'programming', 'coding'],
+  'artificial-intelligence': ['AI', 'machine learning', 'ML'],
+  'mechanical-engineering': ['ME', 'mechanical eng'],
+  'electrical-engineering': ['EE', 'electronic engineering', 'electronics engineering'],
+  'civil-engineering': ['civil eng', 'construction'],
+  'biomedical-engineering': ['BME', 'bioengineering', 'medical engineering'],
+  'software-engineering': ['software development', 'SWE'],
+  'ux-design': ['UX', 'UI', 'user experience', 'user interface'],
+  'supply-chain': ['logistics', 'supply chain'],
+  cybersecurity: ['cyber security', 'information security', 'infosec'],
+  law: ['law', 'pre law', 'legal studies'],
+};
